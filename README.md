@@ -13,9 +13,8 @@ configuration option, and the last column is the performance value to be
 predicted.
 
 ### /results_paper
-
-This folder contains all raw results. Later executions will save results
-in a separate `/results` folder.
+Due to the large size of the datasets and raw results, separate download links are provided for each dataset in `results_paper/results_paper.txt`. The structure of the folders is explained below.
+Later executions will save results in a separate `/results` folder.
 
 The format of the results is as follows:
 
@@ -64,8 +63,7 @@ in the corresponding test sets.
 
 These directories contain the implementations of both state-of-the-art
 approaches, using their publicly available resources:
-https://github.com/DeepPerf/DeepPerf
-https://drive.google.com/drive/folders/1qxYzd5Om0HE1rK0syYQsTPhTQEBjghLh
+https://github.com/DeepPerf/DeepPerf and https://drive.google.com/drive/folders/1qxYzd5Om0HE1rK0syYQsTPhTQEBjghLh
 
 ### ML Techniques
 
