@@ -195,6 +195,11 @@ def aggregate_top_n_nn_results(
         y_train_preds_norm = (y_train_preds - mean) / std
         y_preds_norm = (y_preds - mean) / std
 
+        # Normalize targets so Adam converges (target mean=0, std=1)
+        mean_y = np.mean(y_train)
+        std_y  = np.std(y_train) + 1e-8
+        y_train_norm = (y_train - mean_y) / std_y
+
         # Build 1-layer NN model (no normalization layer)
         model = tf.keras.Sequential([
             tf.keras.layers.Input(shape=(n,)),
@@ -210,10 +215,10 @@ def aggregate_top_n_nn_results(
             ))
 
         # Train NN
-        model.fit(y_train_preds_norm, y_train, epochs=epochs, verbose=0, callbacks=callbacks, shuffle=False)
+        model.fit(y_train_preds_norm, y_train_norm, epochs=epochs, verbose=0, callbacks=callbacks, shuffle=False)
 
-        # Predict
-        y_pred_nn = model.predict(y_preds_norm, verbose=0).flatten()
+        # Predict and inverse-transform back to original scale
+        y_pred_nn = model.predict(y_preds_norm, verbose=0).flatten() * std_y + mean_y
 
         mae = np.mean(np.abs(y_test - y_pred_nn))
         mre = np.mean(np.abs(y_test - y_pred_nn) / (np.abs(y_test))) * 100
@@ -338,7 +343,7 @@ def run_experiment_task(model_name, dataset, sample_index, s):
     print(f"PID {os.getpid()} is running {model_name} on {dataset} sample {s}")
 
 
-    results_dir = f"results/{dataset}/{s}"
+    results_dir = f"results_new/{dataset}/{s}"
     os.makedirs(results_dir, exist_ok=True)
     metrics_results_path = os.path.join(results_dir, f"{model_name}_metrics_results.json")
 
@@ -399,6 +404,7 @@ def run_experiment_task(model_name, dataset, sample_index, s):
                 # NN aggregation
                 nn_path = os.path.join(results_dir, f"{model_name}_top{top_n_g}_nn_predictions.json")
                 if not os.path.exists(nn_path):
+                    log_time(f"[START] {model_name} NN (Top-{top_n_g}) on {dataset} sample {s}")
                     t0 = time.time()
                     nn_results, *_ = aggregate_top_n_nn_results(
                         all_top10_runs, n=top_n_g, epochs=600, activation='linear', loss='mae', early_stopping=True, patience=20
