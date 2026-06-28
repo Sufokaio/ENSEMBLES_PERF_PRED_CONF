@@ -106,3 +106,6 @@ def scott_knott(groups, cohen=0.3, small=3, use_a12=True, conf=0.01,
         return ranks
 
     return sorted(recursive(groups), key=lambda x: x[0])
+
+
+

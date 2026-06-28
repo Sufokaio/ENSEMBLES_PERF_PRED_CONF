@@ -1,0 +1,38 @@
+\begin{tabular}{llccccccc}
+\toprule
+Base type & Rule & $k^*_{\text{med}}$ & $k^*_{\text{mean}}$ & $k^*_{\text{rank}}$ & MRE($k$=2) & MRE($k^*$) & Gain\,(\%) & $k^*>5$\,(\%) \\
+\midrule
+LR & MEAN & 2 & 2 & 2 & 22.195 & 22.195 & 0.0 & 2 \\
+ & IRWM & 3 & 2 & 2 & 21.944 & 21.711 & 1.1 & 2 \\
+ & NN & 5 & 2 & 4 & 22.878 & 20.049 & \textbf{12.4} & 40 \\
+\midrule
+SVR & MEAN & 4 & 4 & 2 & 18.976 & 18.975 & 0.0 & 25 \\
+ & IRWM & 5 & 5 & 2 & 18.977 & 18.976 & 0.0 & 32 \\
+ & NN & 9 & 3 & 9 & 18.926 & 16.998 & 10.2 & 52 \\
+\midrule
+RT & MEAN & 2 & 2 & 2 & 8.833 & 8.833 & 0.0 & 10 \\
+ & IRWM & 3 & 2 & 2 & 8.836 & 8.797 & 0.4 & 20 \\
+ & NN & 4 & 4 & 3 & 9.408 & 9.018 & 4.1 & 30 \\
+\midrule
+RF & MEAN & 2 & 2 & 2 & 8.909 & 8.909 & 0.0 & 35 \\
+ & IRWM & 2 & 2 & 2 & 8.913 & 8.913 & 0.0 & 40 \\
+ & NN & 5 & 5 & 4 & 9.325 & 8.779 & 5.9 & 32 \\
+\midrule
+KNN & MEAN & 9 & 5 & 5 & 19.253 & 18.789 & 2.4 & 60 \\
+ & IRWM & 9 & 7 & 7 & 19.263 & 18.927 & 1.7 & 80 \\
+ & NN & 6 & 2 & 2 & 20.845 & 20.249 & 2.9 & 30 \\
+\midrule
+KRR & MEAN & 3 & 2 & 4 & 10.808 & 10.759 & 0.5 & 30 \\
+ & IRWM & 3 & 2 & 8 & 10.806 & 10.771 & 0.3 & 35 \\
+ & NN & 4 & 4 & 3 & 11.465 & 11.038 & 3.7 & 48 \\
+\midrule
+DeepPerf & MEAN & 4 & 2 & 5 & 5.686 & 5.639 & 0.8 & 38 \\
+ & IRWM & 6 & 3 & 6 & 5.680 & 5.587 & 1.6 & 50 \\
+ & NN & 4 & 4 & 3 & 6.879 & 6.531 & 5.1 & 8 \\
+\midrule
+HINNPerf & MEAN & 6 & 3 & 5 & 5.291 & 5.007 & 5.4 & 60 \\
+ & IRWM & 9 & 4 & 6 & 5.263 & 4.990 & 5.2 & 62 \\
+ & NN & 9 & 4 & 4 & 6.104 & 5.856 & 4.1 & 18 \\
+\bottomrule
+\multicolumn{9}{l}{\footnotesize $k^*_{\text{med}}$: best $k$ by global median MRE. $k^*_{\text{mean}}$: best $k$ by global mean MRE. $k^*_{\text{rank}}$: best $k$ by mean SK rank (Scott-Knott per scenario). Gain: \% MRE improvement from $k$=2 to $k^*_{\text{med}}$. $k^*>5$: \% of 40 scenarios where per-scenario best $k > 5$.} \\
+\end{tabular}

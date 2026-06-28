@@ -1,5 +1,6 @@
 """
-Derived quantities: SA/D for ensembles, W/T/L, imp%, central tendency.
+Derived quantities: SA/D for ensembles, W/T/L, imp%, central tendency,
+mixed (singles+ensembles) SK analysis, and cross-win matrix.
 """
 import numpy as np
 import pandas as pd
@@ -143,6 +144,86 @@ def compute_wtl(df_singles_best, df_ens_best, df_baseline,
             "win_rate_hi":   float(hi),
         })
     return pd.DataFrame(rows)
+
+
+def compute_mixed_sk(df_singles_best, df_ens_best_rq2):
+    """
+    Run SK on all 16 competitors (8 singles + 8 best ensembles) per scenario.
+
+    Competitors are named  "<base_type>_S" (single) and "<base_type>_E" (ensemble).
+
+    Returns
+    -------
+    DataFrame: [dataset, sample_size, metric, competitor, sk_rank, base_type, kind]
+        kind = "single" | "ensemble"
+    """
+    from .sk_borda import run_sk_on_df
+
+    METRICS = ["MRE", "MAE", "MBRE", "MIBRE"]
+
+    s = df_singles_best[df_singles_best["metric"].isin(METRICS)].copy()
+    s["competitor"] = s["model_type"].astype(str) + "_S"
+    s["base_type"]  = s["model_type"]
+    s["kind"]       = "single"
+
+    e = df_ens_best_rq2[df_ens_best_rq2["metric"].isin(METRICS)].copy()
+    e["competitor"] = e["base_type"].astype(str) + "_E"
+    e["kind"]       = "ensemble"
+
+    combined = pd.concat([
+        s[["dataset", "sample_size", "metric", "competitor", "base_type", "kind", "value", "run"]],
+        e[["dataset", "sample_size", "metric", "competitor", "base_type", "kind", "value", "run"]],
+    ], ignore_index=True)
+
+    sk = run_sk_on_df(combined, group_col="competitor", metrics=METRICS)
+
+    meta = combined[["competitor", "base_type", "kind"]].drop_duplicates()
+    sk = sk.merge(meta, on="competitor", how="left")
+    return sk
+
+
+def compute_cross_win_matrix(df_singles_best, df_ens_best_rq2,
+                              metric="MRE", agg="median"):
+    """
+    8×8 matrix: cell (i,j) = % of 40 scenarios where ensemble of base_i
+    has lower metric value than single of base_j.
+
+    Returns
+    -------
+    DataFrame with index=base_type (ensemble), columns=base_type (single).
+    """
+    fn = np.median if agg == "median" else np.mean
+    base_types = sorted(df_singles_best["model_type"].unique())
+
+    s_c = (
+        df_singles_best[df_singles_best["metric"] == metric]
+        .groupby(["model_type", "dataset", "sample_size"])["value"]
+        .agg(fn)
+        .reset_index()
+        .rename(columns={"value": "single_val"})
+    )
+    e_c = (
+        df_ens_best_rq2[df_ens_best_rq2["metric"] == metric]
+        .groupby(["base_type", "dataset", "sample_size"])["value"]
+        .agg(fn)
+        .reset_index()
+        .rename(columns={"value": "ens_val"})
+    )
+
+    mat = {}
+    for base_i in base_types:
+        row = {}
+        ens_sub = e_c[e_c["base_type"] == base_i]
+        for base_j in base_types:
+            sing_sub = s_c[s_c["model_type"] == base_j]
+            merged = ens_sub.merge(sing_sub, on=["dataset", "sample_size"])
+            if len(merged) == 0:
+                row[base_j] = np.nan
+            else:
+                row[base_j] = float((merged["ens_val"] < merged["single_val"]).mean() * 100)
+        mat[base_i] = row
+
+    return pd.DataFrame(mat).T.reindex(index=base_types, columns=base_types)
 
 
 def _wilson_ci(successes, total, alpha=0.05):

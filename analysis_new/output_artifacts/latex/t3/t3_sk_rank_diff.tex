@@ -1,0 +1,15 @@
+\begin{tabular}{lcccc}
+\toprule
+Model & MRE & MAE & MBRE & MIBRE \\
+\midrule
+LR & -0.50 & -0.55 & -0.40 & -0.38 \\
+SVR & -0.38 & \textbf{-0.58} & \textbf{-0.62} & -0.38 \\
+RT & +0.00 & -0.05 & -0.05 & +0.05 \\
+RF & -0.05 & +0.00 & -0.10 & -0.02 \\
+KNN & -0.25 & -0.25 & -0.42 & -0.08 \\
+KRR & -0.10 & -0.12 & -0.12 & -0.15 \\
+DeepPerf & -0.43 & -0.48 & -0.58 & -0.55 \\
+HINNPerf & \textbf{-0.55} & -0.45 & -0.47 & \textbf{-0.65} \\
+\bottomrule
+\multicolumn{5}{l}{\footnotesize $\Delta$ SK rank = mean SK rank (ensemble) $-$ mean SK rank (single) in mixed ranking. Negative = ensemble improved.} \\
+\end{tabular}

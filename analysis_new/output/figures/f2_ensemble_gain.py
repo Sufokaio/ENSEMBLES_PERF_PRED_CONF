@@ -33,9 +33,26 @@ def generate(df_singles_best, df_ens_best, figures_dir,
 
     fn = np.median if agg == "median" else np.mean
 
-    for metrics_set, tag in [(["MRE"], "mre"), (["MRE", "MIBRE"], "mre_mibre")]:
-        _make_heatmap(df_singles_best, df_ens_best, models, datasets, metrics_set,
-                      fn, agg, tag, out_dir)
+    _make_heatmap(df_singles_best, df_ens_best, models, datasets, ["MRE"],
+                  fn, agg, "mre", out_dir)
+
+
+def generate_s1(df_singles_best, df_ens_best, figures_dir,
+                model_order=None, dataset_order=None, agg="median"):
+    """S1-only variant: filter to smallest sample size per dataset (8 scenarios)."""
+    out_dir  = os.path.join(figures_dir, "f2")
+    models   = model_order   or sorted(df_ens_best["base_type"].unique())
+    datasets = dataset_order or sorted(df_singles_best["dataset"].unique())
+    fn = np.median if agg == "median" else np.mean
+
+    mins_s = df_singles_best.groupby("dataset")["sample_size"].min().reset_index(name="_min")
+    mins_e = df_ens_best.groupby("dataset")["sample_size"].min().reset_index(name="_min")
+    s1_s = df_singles_best.merge(mins_s, on="dataset")
+    s1_s = s1_s[s1_s["sample_size"] == s1_s["_min"]].drop(columns="_min")
+    s1_e = df_ens_best.merge(mins_e, on="dataset")
+    s1_e = s1_e[s1_e["sample_size"] == s1_e["_min"]].drop(columns="_min")
+
+    _make_heatmap(s1_s, s1_e, models, datasets, ["MRE"], fn, agg, "mre_s1", out_dir)
 
 
 def _make_heatmap(df_s, df_e, models, datasets, metrics, fn, agg_label, tag, out_dir):

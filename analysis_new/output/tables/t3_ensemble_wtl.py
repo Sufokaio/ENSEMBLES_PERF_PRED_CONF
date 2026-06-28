@@ -14,19 +14,17 @@ from output.utils import bold, save_tex
 METRICS_DISPLAY = ["MRE", "MAE", "MBRE", "MIBRE", "SA"]
 
 
-def generate(wtl_df, latex_dir, model_order=None):
+def generate(wtl_df, latex_dir, model_order=None, agg_label="mean"):
     """
     Parameters
     ----------
-    wtl_df : output of comparisons.compute_wtl()
-             [base_type, metric, W, T, L, N, imp_pct_mean, win_rate, win_rate_lo, win_rate_hi]
+    wtl_df    : output of comparisons.compute_wtl() for one agg variant
+                [base_type, metric, W, T, L, N, imp_pct_mean, win_rate, win_rate_lo, win_rate_hi]
+    agg_label : "mean" or "median" — used only for output filenames
     """
     out_dir = os.path.join(latex_dir, "t3")
     models  = model_order or sorted(wtl_df["base_type"].unique())
-
-    for agg_label in ("mean", "median"):
-        # wtl_df already computed for one agg; caller passes one per variant
-        _one_variant(wtl_df, models, agg_label, out_dir)
+    _one_variant(wtl_df, models, agg_label, out_dir)
 
 
 def _one_variant(df, models, agg_label, out_dir):
@@ -100,3 +98,66 @@ def _one_variant_winrate(df, models, agg_label, out_dir):
     lines += [r"\bottomrule", r"\end{tabular}"]
     fname = f"t3_winrate_{agg_label}.tex"
     save_tex(lines, os.path.join(out_dir, fname))
+
+
+def generate_sk_diff(sk_mixed, latex_dir, model_order=None):
+    """
+    T3 SK-rank-difference variant.
+
+    For each (base_type, metric): mean_SK_rank(ensemble) - mean_SK_rank(single)
+    when singles and ensembles are ranked TOGETHER in the mixed SK analysis.
+    Negative = ensemble improved its cluster standing vs the single.
+
+    Output: t3_sk_rank_diff.tex
+    """
+    import numpy as np
+
+    METRICS_EVAL = ["MRE", "MAE", "MBRE", "MIBRE"]
+    out_dir = os.path.join(latex_dir, "t3")
+    base_types = model_order or sorted(
+        sk_mixed[sk_mixed["kind"] == "single"]["base_type"].unique()
+    )
+
+    rows = []
+    for bt in base_types:
+        row = {"Model": bt}
+        for metric in METRICS_EVAL:
+            sub = sk_mixed[sk_mixed["metric"] == metric]
+            s_ranks = sub[(sub["base_type"] == bt) & (sub["kind"] == "single")]["sk_rank"]
+            e_ranks = sub[(sub["base_type"] == bt) & (sub["kind"] == "ensemble")]["sk_rank"]
+            if s_ranks.empty or e_ranks.empty:
+                row[metric] = np.nan
+            else:
+                row[metric] = float(e_ranks.mean()) - float(s_ranks.mean())
+        rows.append(row)
+
+    best = {}
+    for metric in METRICS_EVAL:
+        vals = [r[metric] for r in rows if not np.isnan(r[metric])]
+        best[metric] = min(vals) if vals else np.nan
+
+    col_spec = "l" + "c" * len(METRICS_EVAL)
+    lines = [
+        r"\begin{tabular}{" + col_spec + "}",
+        r"\toprule",
+        "Model & " + " & ".join(METRICS_EVAL) + r" \\",
+        r"\midrule",
+    ]
+    for row in rows:
+        cells = [row["Model"]]
+        for metric in METRICS_EVAL:
+            v = row[metric]
+            if np.isnan(v):
+                cells.append("--")
+            else:
+                cell = f"{v:+.2f}"
+                if not np.isnan(best[metric]) and abs(v - best[metric]) < 1e-9:
+                    cell = bold(cell)
+                cells.append(cell)
+        lines.append(" & ".join(cells) + r" \\")
+    lines += [
+        r"\bottomrule",
+        r"\multicolumn{" + str(len(METRICS_EVAL)+1) + r"}{l}{\footnotesize $\Delta$ SK rank = mean SK rank (ensemble) $-$ mean SK rank (single) in mixed ranking. Negative = ensemble improved.} \\",
+        r"\end{tabular}",
+    ]
+    save_tex(lines, os.path.join(out_dir, "t3_sk_rank_diff.tex"))

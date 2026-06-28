@@ -1,0 +1,113 @@
+"""
+F_MRE_ABS_HEATMAP: Absolute MRE heatmap — models x datasets (RQ1).
+
+Datasets sorted easy→hard (lowest best-achievable MRE on the left).
+Four variants: median vs mean  x  all sample sizes vs S1 only.
+
+When sk_singles is provided, each cell shows:
+  top line   — MRE value (larger)
+  bottom line — mean SK rank across scenarios (smaller, grey)
+"""
+import os
+import numpy as np
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+
+from .plot_utils import save_figure
+
+
+def _sk_pivot(sk_singles, sample_sizes=None):
+    """Mean SK rank (MRE metric) per (model_type, dataset).
+
+    sample_sizes : if given, filter to those sample sizes before averaging.
+    """
+    sub = sk_singles[sk_singles["metric"] == "MRE"].copy()
+    if sample_sizes is not None:
+        sub = sub[sub["sample_size"].isin(sample_sizes)]
+    return (
+        sub.groupby(["model_type", "dataset"])["sk_rank"]
+        .mean().unstack("dataset")
+    )
+
+
+def _draw(pivot_mre, models, ds_order, agg_label, scope_label,
+          out_dir, fname, sk_piv=None):
+    mat     = pivot_mre.reindex(index=models, columns=ds_order).values.astype(float)
+    mat_sk  = sk_piv.reindex(index=models, columns=ds_order).values.astype(float) \
+              if sk_piv is not None else None
+    vmax = float(np.nanpercentile(mat[~np.isnan(mat)], 95)) if not np.all(np.isnan(mat)) else 1.0
+
+    fig, ax = plt.subplots(figsize=(8, 3.5))
+    im = ax.imshow(mat, cmap="YlOrRd", aspect="auto", vmin=0, vmax=vmax)
+
+    ax.set_xticks(range(len(ds_order)))
+    ax.set_xticklabels(ds_order, rotation=38, ha="right", fontsize=7)
+    ax.set_yticks(range(len(models)))
+    ax.set_yticklabels(models, fontsize=8)
+    ax.set_xlabel("Dataset (easy → hard)")
+    ax.set_title(f"{agg_label} MRE per model × dataset — {scope_label}")
+
+    for i in range(len(models)):
+        for j in range(len(ds_order)):
+            v = mat[i, j]
+            if np.isnan(v):
+                continue
+            text_color = "white" if v > vmax * 0.65 else "black"
+
+            if mat_sk is not None and not np.isnan(mat_sk[i, j]):
+                # MRE value on top, SK rank subscript below
+                ax.text(j, i - 0.18, f"{v:.2f}",
+                        ha="center", va="center", fontsize=5.5, color=text_color,
+                        fontweight="bold")
+                ax.text(j, i + 0.25, f"sk {mat_sk[i, j]:.1f}",
+                        ha="center", va="center", fontsize=4.5,
+                        color=text_color, alpha=0.85)
+            else:
+                ax.text(j, i, f"{v:.2f}", ha="center", va="center",
+                        fontsize=5.5, color=text_color)
+
+    cbar = fig.colorbar(im, ax=ax, fraction=0.03)
+    cbar.set_label(f"{agg_label} MRE")
+    fig.tight_layout()
+    save_figure(fig, os.path.join(out_dir, fname))
+
+
+def generate(df_singles_best, figures_dir, sk_singles=None,
+             model_order=None, dataset_order=None):
+    out_dir = os.path.join(figures_dir, "f_mre_abs_heatmap")
+    models  = model_order or sorted(df_singles_best["model_type"].unique())
+    sub     = df_singles_best[df_singles_best["metric"] == "MRE"]
+
+    # difficulty order from median MRE
+    med_pivot = sub.groupby(["model_type", "dataset"])["value"].median().unstack("dataset")
+    ds_order  = dataset_order or med_pivot.min(axis=0).sort_values().index.tolist()
+
+    # S1 subset
+    mins   = sub.groupby("dataset")["sample_size"].min().reset_index(name="_min")
+    sub_s1 = sub.merge(mins, on="dataset").query("sample_size == _min").drop(columns="_min")
+    s1_sizes = sub_s1["sample_size"].unique() if not sub_s1.empty else None
+
+    # SK rank pivots (if sk_singles provided)
+    sk_all = _sk_pivot(sk_singles) if sk_singles is not None else None
+    sk_s1  = _sk_pivot(sk_singles, sample_sizes=s1_sizes) \
+             if sk_singles is not None and s1_sizes is not None else None
+
+    for agg_label, agg_fn in [("Median", "median"), ("Mean", "mean")]:
+        # all scenarios
+        pivot_all = getattr(
+            sub.groupby(["model_type", "dataset"])["value"], agg_fn
+        )().unstack("dataset")
+        _draw(pivot_all, models, ds_order, agg_label,
+              "all 40 scenarios", out_dir,
+              f"f_mre_abs_heatmap_{agg_fn}_all.pdf",
+              sk_piv=sk_all)
+
+        # S1 only
+        pivot_s1 = getattr(
+            sub_s1.groupby(["model_type", "dataset"])["value"], agg_fn
+        )().unstack("dataset")
+        _draw(pivot_s1, models, ds_order, agg_label,
+              "S1 only (8 scenarios)", out_dir,
+              f"f_mre_abs_heatmap_{agg_fn}_s1.pdf",
+              sk_piv=sk_s1)
