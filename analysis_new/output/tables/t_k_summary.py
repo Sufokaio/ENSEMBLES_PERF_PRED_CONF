@@ -156,3 +156,87 @@ def generate(df_ens_raw, latex_dir, model_order=None):
         r"\end{tabular}",
     ]
     save_tex(lines, os.path.join(out_dir, "t_k_summary.tex"))
+
+
+def generate_by_base(df_ens_raw, latex_dir, model_order=None):
+    """Compact 8-row table: per base type, rules aggregated.
+
+    Rows = base type (8). Columns:
+      k*(med)   — k with lowest global median MRE across all rules & datasets
+      MRE(k=2)  — median MRE at k=2 (agg. across rules & datasets)
+      MRE(k*)   — median MRE at k* (agg. across rules & datasets)
+      Gain%     — (MRE(k=2) − MRE(k*)) / MRE(k=2) × 100
+      k*>5 %    — % of 40×3=120 (scenario, rule) combos where per-combo best k > 5
+    """
+    out_dir    = os.path.join(latex_dir, "t_k_summary")
+    base_types = model_order or sorted(df_ens_raw["base_type"].unique())
+
+    sub = df_ens_raw[df_ens_raw["metric"] == "MRE"].copy()
+
+    # Global aggregation across rules AND datasets
+    global_med = (
+        sub.groupby(["base_type", "k"])["value"]
+        .median().reset_index(name="med_mre")
+    )
+
+    # Per-scenario-rule best k (for %k>5)
+    per_combo = (
+        sub.groupby(["base_type", "rule", "dataset", "sample_size", "k"])["value"]
+        .median().reset_index(name="med_mre")
+    )
+    idx_best = per_combo.groupby(["base_type", "rule", "dataset", "sample_size"])["med_mre"].idxmin()
+    best_k_pc = per_combo.loc[idx_best, ["base_type", "rule", "dataset", "sample_size", "k"]]
+
+    rows = []
+    for bt in base_types:
+        g = global_med[global_med["base_type"] == bt]
+
+        km  = int(g.loc[g["med_mre"].idxmin(), "k"]) if not g.empty else "--"
+
+        row_k2   = g[g["k"] == 2]
+        mre_k2   = float(row_k2["med_mre"].values[0]) if not row_k2.empty else np.nan
+
+        mre_best = np.nan
+        if isinstance(km, int):
+            row_best = g[g["k"] == km]
+            mre_best = float(row_best["med_mre"].values[0]) if not row_best.empty else np.nan
+
+        gain_pct = (mre_k2 - mre_best) / mre_k2 * 100 \
+                   if not np.isnan(mre_k2) and not np.isnan(mre_best) and mre_k2 > 0 else np.nan
+
+        bk = best_k_pc[best_k_pc["base_type"] == bt]
+        pct_gt5 = float((bk["k"] > 5).mean() * 100) if not bk.empty else np.nan
+
+        rows.append({"base_type": bt, "k_med": km,
+                     "mre_k2": mre_k2, "mre_best": mre_best,
+                     "gain_pct": gain_pct, "pct_k_gt5": pct_gt5})
+
+    df = pd.DataFrame(rows)
+    best_gain = df["gain_pct"].max()
+
+    lines = [
+        r"\begin{tabular}{lccccc}",
+        r"\toprule",
+        r"Base type & $k^*$ & MRE($k$=2) & MRE($k^*$) & Gain\,(\%) & $k^*>5$\,(\%) \\",
+        r"\midrule",
+    ]
+
+    for _, row in df.iterrows():
+        gain_str = f"{row['gain_pct']:.1f}" if not np.isnan(row["gain_pct"]) else "--"
+        pct_str  = f"{row['pct_k_gt5']:.0f}" if not np.isnan(row["pct_k_gt5"]) else "--"
+        mre_k2   = f"{row['mre_k2']:.3f}"  if not np.isnan(row["mre_k2"])  else "--"
+        mre_best = f"{row['mre_best']:.3f}" if not np.isnan(row["mre_best"]) else "--"
+        if not np.isnan(row["gain_pct"]) and abs(row["gain_pct"] - best_gain) < 1e-9:
+            gain_str = bold(gain_str)
+        cells = [str(row["base_type"]), str(row["k_med"]), mre_k2, mre_best, gain_str, pct_str]
+        lines.append(" & ".join(cells) + r" \\")
+
+    lines += [
+        r"\bottomrule",
+        r"\multicolumn{6}{l}{\footnotesize "
+        r"$k^*$: $k$ with lowest global median MRE aggregated across all rules and datasets. "
+        r"Gain: \% MRE improvement from $k$=2 to $k^*$. "
+        r"$k^*>5$: \% of 120 (scenario$\times$rule) combinations where per-combination best $k > 5$.} \\",
+        r"\end{tabular}",
+    ]
+    save_tex(lines, os.path.join(out_dir, "t_k_summary_bybase.tex"))

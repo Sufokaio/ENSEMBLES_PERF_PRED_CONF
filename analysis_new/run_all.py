@@ -289,8 +289,10 @@ def stage_tables(sel_agg="median"):
     print("T_LIFT_SUMMARY: ensemble vs single lift summary …")
     t_lift_summary.generate(sk_mixed, cfg.LATEX_DIR, model_order=model_order)
 
-    print("T_K_SUMMARY: optimal k tabular summary …")
+    print("T_K_SUMMARY: optimal k tabular summary (by base type × rule) …")
     t_k_summary.generate(_load("ensembles_raw"), cfg.LATEX_DIR, model_order=model_order)
+    print("T_K_SUMMARY by base type (rules aggregated) …")
+    t_k_summary.generate_by_base(_load("ensembles_raw"), cfg.LATEX_DIR, model_order=model_order)
 
     print("All tables done.")
 
@@ -322,6 +324,7 @@ def stage_figures(sel_agg="median"):
         f_model_dataset_rank, f_rank_flip_heatmap,
         f_4metric_heatmap, f_dataset_rank_profiles,
         f_bump_chart, f_metric_consistency,
+        f_gap_close2,
     )
 
     df_singles_best    = _load("singles_best")
@@ -433,6 +436,8 @@ def stage_figures(sel_agg="median"):
         sk_mixed, cfg.FIGURES_DIR,
         model_order=model_order, dataset_order=dataset_order
     )
+    print("F_GAP_CLOSE2: single-dataset zoom …")
+    f_gap_close2.generate(sk_mixed, cfg.FIGURES_DIR, model_order=model_order)
 
     print("F_BORDA_MIXED: Borda score singles vs ensembles …")
     f_borda_mixed.generate(sk_mixed, cfg.FIGURES_DIR, model_order=model_order)
@@ -447,9 +452,23 @@ def stage_figures(sel_agg="median"):
 
     print("F_K_ELBOW: MRE vs k per base type …")
     f_k_elbow.generate(df_ens_raw, cfg.FIGURES_DIR, model_order=model_order)
-    print("F_K_ELBOW_DATASET: MRE vs k per dataset …")
+    print("F_K_ELBOW_DATASET: MRE vs k per dataset (by rule) …")
     f_k_elbow_dataset.generate(
         df_ens_raw, cfg.FIGURES_DIR, dataset_order=dataset_order
+    )
+    print("F_K_ELBOW_DATASET by base type (all datasets) …")
+    f_k_elbow_dataset.generate_by_base(
+        df_ens_raw, cfg.FIGURES_DIR,
+        dataset_order=dataset_order, model_order=model_order
+    )
+    print("F_K_ELBOW_DATASET by base type (S1 only) …")
+    f_k_elbow_dataset.generate_by_base_s1(
+        df_ens_raw, cfg.FIGURES_DIR,
+        dataset_order=dataset_order, model_order=model_order
+    )
+    print("F_K_ELBOW_DATASET by base type (aggregate) …")
+    f_k_elbow_dataset.generate_by_base_agg(
+        df_ens_raw, cfg.FIGURES_DIR, model_order=model_order
     )
 
     print("F_RULE_VIOLIN: MRE distribution per rule …")

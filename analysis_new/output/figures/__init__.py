@@ -41,4 +41,5 @@ from . import (
     f_dataset_rank_profiles,
     f_bump_chart,
     f_metric_consistency,
+    f_gap_close2,
 )
