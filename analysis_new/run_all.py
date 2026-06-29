@@ -196,6 +196,13 @@ def stage_aggregate(sel_metric="MRE", sel_agg="median"):
         sk_mixed = compute_mixed_sk(df_singles_best, df_ens_best_rq2)
         _save(sk_mixed, "sk_mixed")
 
+    # ── SK ranks for all k values (RQ3.2 statistical plots) ─────────────
+    if not _skip("k_sk_ranks"):
+        print("Running SK per scenario across k values (RQ3.2) …")
+        from aggregators.comparisons import compute_k_sk_ranks
+        k_sk_ranks = compute_k_sk_ranks(_load("ensembles_raw"))
+        _save(k_sk_ranks, "k_sk_ranks")
+
     # ── Cross-win matrix ──────────────────────────────────────────────────
     if not _skip("cross_win_matrix"):
         print("Computing cross-win matrix (8x8) …")
@@ -218,6 +225,7 @@ def stage_tables(sel_agg="median"):
         t_sk_count, t_combined_rank, t_cross_win,
         t_combined_rank_dataset, t_lift_summary,
         t_k_summary,
+        t_k_vs_baseline,
     )
 
     df_singles_best   = _load("singles_best")
@@ -293,6 +301,11 @@ def stage_tables(sel_agg="median"):
     t_k_summary.generate(_load("ensembles_raw"), cfg.LATEX_DIR, model_order=model_order)
     print("T_K_SUMMARY by base type (rules aggregated) …")
     t_k_summary.generate_by_base(_load("ensembles_raw"), cfg.LATEX_DIR, model_order=model_order)
+    print("T_K_VS_BASELINE: %% scenarios statistically better than k=2 …")
+    k_sk_ranks = _load("k_sk_ranks")
+    t_k_vs_baseline.generate(k_sk_ranks, cfg.LATEX_DIR, model_order=model_order)
+    t_k_vs_baseline.generate_s1(k_sk_ranks, cfg.LATEX_DIR, model_order=model_order)
+
     print("T_K_THRESHOLD: min k to capture 90%% of gain …")
     t_k_summary.generate_threshold(_load("ensembles_raw"), cfg.LATEX_DIR, model_order=model_order)
     print("T_K_FIXED: % extra error at fixed k vs optimal …")
@@ -329,6 +342,7 @@ def stage_figures(sel_agg="median"):
         f_4metric_heatmap, f_dataset_rank_profiles,
         f_bump_chart, f_metric_consistency,
         f_gap_close2,
+        f_k_sk_rank_curve, f_k_rank1_heatmap,
     )
 
     df_singles_best    = _load("singles_best")
@@ -474,6 +488,15 @@ def stage_figures(sel_agg="median"):
         df_ens_raw, cfg.FIGURES_DIR,
         dataset_order=dataset_order, model_order=model_order
     )
+    print("F_K_SK_RANK_CURVE: mean SK rank vs k …")
+    k_sk_ranks = _load("k_sk_ranks")
+    f_k_sk_rank_curve.generate(k_sk_ranks, cfg.FIGURES_DIR, model_order=model_order)
+    f_k_sk_rank_curve.generate_s1(k_sk_ranks, cfg.FIGURES_DIR, model_order=model_order)
+
+    print("F_K_RANK1_HEATMAP: %% rank-1 per (base_type, rule, k) …")
+    f_k_rank1_heatmap.generate(k_sk_ranks, cfg.FIGURES_DIR, model_order=model_order)
+    f_k_rank1_heatmap.generate_s1(k_sk_ranks, cfg.FIGURES_DIR, model_order=model_order)
+
     print("F_K_ELBOW_DATASET by base type (aggregate, all scenarios) …")
     f_k_elbow_dataset.generate_by_base_agg(
         df_ens_raw, cfg.FIGURES_DIR, model_order=model_order

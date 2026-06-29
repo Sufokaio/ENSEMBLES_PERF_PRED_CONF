@@ -42,4 +42,6 @@ from . import (
     f_bump_chart,
     f_metric_consistency,
     f_gap_close2,
+    f_k_sk_rank_curve,
+    f_k_rank1_heatmap,
 )

@@ -226,6 +226,45 @@ def compute_cross_win_matrix(df_singles_best, df_ens_best_rq2,
     return pd.DataFrame(mat).T.reindex(index=base_types, columns=base_types)
 
 
+def compute_k_sk_ranks(df_ens_raw, metric="MRE"):
+    """Run SK per (base_type, rule, dataset, sample_size) on k=2..10 treatments.
+
+    Returns a long DataFrame:
+      [base_type, rule, dataset, sample_size, k, sk_rank]
+    where sk_rank is the Scott-Knott group rank for each k within that scenario
+    (rank 1 = statistically best group).  Used by RQ3.2 statistical plots.
+    """
+    from .sk_impl import scott_knott
+
+    SK_KW = {"a12_threshold": 0.60, "conf": 0.01, "seed": 42}
+
+    sub  = df_ens_raw[df_ens_raw["metric"] == metric].copy()
+    rows = []
+
+    for (bt, rule, ds, ss), grp in sub.groupby(
+            ["base_type", "rule", "dataset", "sample_size"]):
+        treatments = {
+            int(k): vals["value"].tolist()
+            for k, vals in grp.groupby("k")
+        }
+        if len(treatments) < 2:
+            for k in treatments:
+                rows.append({"base_type": bt, "rule": rule,
+                             "dataset": ds, "sample_size": ss,
+                             "k": k, "sk_rank": 1})
+            continue
+        try:
+            for rank, k, *_ in scott_knott(
+                    [(k, v) for k, v in treatments.items()], **SK_KW):
+                rows.append({"base_type": bt, "rule": rule,
+                             "dataset": ds, "sample_size": ss,
+                             "k": int(k), "sk_rank": int(rank)})
+        except Exception:
+            pass
+
+    return pd.DataFrame(rows)
+
+
 def _wilson_ci(successes, total, alpha=0.05):
     """Wilson score interval. Returns (p_hat, lo, hi)."""
     if total == 0:
