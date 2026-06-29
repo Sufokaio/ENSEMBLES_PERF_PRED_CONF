@@ -454,8 +454,12 @@ def stage_figures(sel_agg="median"):
     print("F_K_BOX: MRE distribution per k …")
     f_k_box.generate(df_ens_raw, cfg.FIGURES_DIR)
 
-    print("F_K_ELBOW: MRE vs k per base type …")
+    print("F_K_ELBOW: MRE vs k per base type (median, all scenarios) …")
     f_k_elbow.generate(df_ens_raw, cfg.FIGURES_DIR, model_order=model_order)
+    print("F_K_ELBOW mean (all scenarios) …")
+    f_k_elbow.generate_mean(df_ens_raw, cfg.FIGURES_DIR, model_order=model_order)
+    print("F_K_ELBOW mean S1 (per-dataset min sample size) …")
+    f_k_elbow.generate_s1_mean(df_ens_raw, cfg.FIGURES_DIR, model_order=model_order)
     print("F_K_ELBOW_DATASET: MRE vs k per dataset (by rule) …")
     f_k_elbow_dataset.generate(
         df_ens_raw, cfg.FIGURES_DIR, dataset_order=dataset_order
