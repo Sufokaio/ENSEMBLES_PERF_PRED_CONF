@@ -1,89 +1,68 @@
 """
-F_GAP_CLOSE2: Single-dataset zoom of SK rank improvement (RQ2).
+F_GAP_CLOSE2: S1-only variant of f_gap_close (RQ2).
 
-For the chosen dataset (auto-selected as the one with the highest mean |ΔSK|
-across models and metrics, or supplied via `focus_dataset`), shows a grouped bar
-chart: x = base model type, grouped bars per metric (MRE/MAE/MBRE/MIBRE).
-Bar height = mean(SK_rank_ensemble) − mean(SK_rank_single) across sample sizes.
-Negative (below zero line) = ensemble moved to a better SK cluster.
-
-This is the per-dataset "zoom" companion to f_gap_close (which shows all
-8 datasets as a heatmap).
+Same heatmap as f_gap_close (base_type × dataset, color = Δ SK rank),
+but restricted to the smallest sample size per dataset (S1 tier = 8 scenarios
+instead of 40). Reveals whether ensemble gains are consistent at the most
+data-scarce setting.
 """
 import os
 import numpy as np
-import pandas as pd
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 from .plot_utils import save_figure
 
-METRICS       = ["MRE", "MAE", "MBRE", "MIBRE"]
-METRIC_COLORS = {
-    "MRE":   "#2166ac",
-    "MAE":   "#4dac26",
-    "MBRE":  "#d01c8b",
-    "MIBRE": "#e08214",
-}
+
+def _s1_filter(df):
+    """Keep only rows at the minimum sample_size for each dataset."""
+    min_ss = df.groupby("dataset")["sample_size"].transform("min")
+    return df[df["sample_size"] == min_ss]
 
 
-def _compute_deltas(sk_mixed):
-    """Return DataFrame with columns [base_type, dataset, metric, delta]."""
-    records = []
-    for metric in METRICS:
-        sub = sk_mixed[sk_mixed["metric"] == metric]
-        for (bt, ds), grp in sub.groupby(["base_type", "dataset"]):
-            s = grp[grp["kind"] == "single"]["sk_rank"]
-            e = grp[grp["kind"] == "ensemble"]["sk_rank"]
+def generate(sk_mixed, figures_dir, model_order=None, dataset_order=None):
+    out_dir    = os.path.join(figures_dir, "f_gap_close2")
+    base_types = model_order   or sorted(sk_mixed["base_type"].unique())
+    datasets   = dataset_order or sorted(sk_mixed["dataset"].unique())
+
+    sub    = sk_mixed[sk_mixed["metric"] == "MRE"]
+    sub_s1 = _s1_filter(sub)
+
+    mat = np.full((len(base_types), len(datasets)), np.nan)
+    for i, bt in enumerate(base_types):
+        for j, ds in enumerate(datasets):
+            s = sub_s1[(sub_s1["base_type"] == bt) & (sub_s1["kind"] == "single")   & (sub_s1["dataset"] == ds)]["sk_rank"]
+            e = sub_s1[(sub_s1["base_type"] == bt) & (sub_s1["kind"] == "ensemble") & (sub_s1["dataset"] == ds)]["sk_rank"]
             if s.empty or e.empty:
                 continue
-            records.append({
-                "base_type": bt,
-                "dataset":   ds,
-                "metric":    metric,
-                "delta":     float(e.mean()) - float(s.mean()),
-            })
-    return pd.DataFrame(records)
+            mat[i, j] = float(e.mean()) - float(s.mean())
 
+    vmax = max(float(np.nanmax(np.abs(mat))), 0.5)
 
-def generate(sk_mixed, figures_dir, model_order=None, focus_dataset=None):
-    """Grouped bar chart for one dataset, all 4 metrics."""
-    out_dir    = os.path.join(figures_dir, "f_gap_close2")
-    base_types = model_order or sorted(sk_mixed["base_type"].unique())
+    fig, ax = plt.subplots(figsize=(7.0, 3.5))
+    cmap = matplotlib.cm.get_cmap("RdYlGn_r")
+    im   = ax.imshow(mat, cmap=cmap, vmin=-vmax, vmax=vmax, aspect="auto")
 
-    df = _compute_deltas(sk_mixed)
-
-    if focus_dataset is None:
-        score = df.groupby("dataset")["delta"].apply(lambda x: x.abs().mean())
-        focus_dataset = score.idxmax()
-
-    df_ds = df[df["dataset"] == focus_dataset]
-
-    x       = np.arange(len(base_types))
-    n_met   = len(METRICS)
-    width   = 0.18
-    offsets = np.linspace(-(n_met - 1) / 2, (n_met - 1) / 2, n_met) * width
-
-    fig, ax = plt.subplots(figsize=(8.5, 3.8))
-    for i, metric in enumerate(METRICS):
-        ys = []
-        for bt in base_types:
-            row = df_ds[(df_ds["base_type"] == bt) & (df_ds["metric"] == metric)]
-            ys.append(float(row["delta"].values[0]) if len(row) > 0 else 0.0)
-        ax.bar(x + offsets[i], ys, width, label=metric,
-               color=METRIC_COLORS[metric], alpha=0.82)
-
-    ax.axhline(0, color="black", linewidth=0.8, linestyle="--")
-    ax.set_xticks(x)
-    ax.set_xticklabels(base_types, fontsize=8)
-    ax.set_ylabel("Δ SK rank (ensemble − single)")
+    ax.set_xticks(range(len(datasets)))
+    ax.set_xticklabels(datasets, rotation=45, ha="right", fontsize=8)
+    ax.set_yticks(range(len(base_types)))
+    ax.set_yticklabels(base_types, fontsize=8)
+    ax.set_xlabel("Dataset")
+    ax.set_ylabel("Base model type")
     ax.set_title(
-        f"SK rank change: best ensemble vs single — {focus_dataset} (RQ2)\n"
-        "Negative = ensemble improved; bars grouped by metric"
+        "SK rank change: ensemble − single (MRE, S1 per dataset)\n"
+        "Negative (green) = ensemble improved at smallest sample size"
     )
-    ax.legend(title="Metric", fontsize=7, title_fontsize=7, loc="lower left")
-    ax.grid(True, axis="y", alpha=0.25, linewidth=0.5)
+
+    for i in range(len(base_types)):
+        for j in range(len(datasets)):
+            v = mat[i, j]
+            if not np.isnan(v):
+                ax.text(j, i, f"{v:+.1f}", ha="center", va="center",
+                        fontsize=7, color="black" if abs(v) < vmax * 0.6 else "white")
+
+    cbar = fig.colorbar(im, ax=ax, fraction=0.03, pad=0.04)
+    cbar.set_label("Δ SK rank (ens − single)")
     fig.tight_layout()
-    save_figure(fig, os.path.join(out_dir, f"f_gap_close2_{focus_dataset}.pdf"))
-    return focus_dataset
+    save_figure(fig, os.path.join(out_dir, "f_gap_close2_s1.pdf"))

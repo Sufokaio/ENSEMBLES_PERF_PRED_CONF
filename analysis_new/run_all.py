@@ -293,6 +293,10 @@ def stage_tables(sel_agg="median"):
     t_k_summary.generate(_load("ensembles_raw"), cfg.LATEX_DIR, model_order=model_order)
     print("T_K_SUMMARY by base type (rules aggregated) …")
     t_k_summary.generate_by_base(_load("ensembles_raw"), cfg.LATEX_DIR, model_order=model_order)
+    print("T_K_THRESHOLD: min k to capture 90%% of gain …")
+    t_k_summary.generate_threshold(_load("ensembles_raw"), cfg.LATEX_DIR, model_order=model_order)
+    print("T_K_FIXED: % extra error at fixed k vs optimal …")
+    t_k_summary.generate_fixed_k(_load("ensembles_raw"), cfg.LATEX_DIR, model_order=model_order)
 
     print("All tables done.")
 
@@ -466,8 +470,12 @@ def stage_figures(sel_agg="median"):
         df_ens_raw, cfg.FIGURES_DIR,
         dataset_order=dataset_order, model_order=model_order
     )
-    print("F_K_ELBOW_DATASET by base type (aggregate) …")
+    print("F_K_ELBOW_DATASET by base type (aggregate, all scenarios) …")
     f_k_elbow_dataset.generate_by_base_agg(
+        df_ens_raw, cfg.FIGURES_DIR, model_order=model_order
+    )
+    print("F_K_ELBOW_DATASET by base type (aggregate, S1 per dataset) …")
+    f_k_elbow_dataset.generate_by_base_agg_s1(
         df_ens_raw, cfg.FIGURES_DIR, model_order=model_order
     )
 

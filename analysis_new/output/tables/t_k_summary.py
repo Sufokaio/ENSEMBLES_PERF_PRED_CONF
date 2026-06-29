@@ -240,3 +240,145 @@ def generate_by_base(df_ens_raw, latex_dir, model_order=None):
         r"\end{tabular}",
     ]
     save_tex(lines, os.path.join(out_dir, "t_k_summary_bybase.tex"))
+
+
+def generate_threshold(df_ens_raw, latex_dir, model_order=None, threshold=0.90):
+    """Table idea A: k-threshold table (RQ3.2).
+
+    For each (base_type, rule): the smallest k that captures ≥`threshold` of the
+    total MRE gain from k=2 to k=10.
+
+    Answers: 'what is the practical minimum k?' — k_thresh=2 means gains plateau
+    immediately; k_thresh=9 means you need many learners to extract value.
+
+    Rows: base types. Column groups: MEAN | IRWM | NN, each showing k_thresh.
+    """
+    out_dir    = os.path.join(latex_dir, "t_k_summary")
+    base_types = model_order or sorted(df_ens_raw["base_type"].unique())
+
+    sub = df_ens_raw[df_ens_raw["metric"] == "MRE"].copy()
+
+    # Global median MRE per (base_type, rule, k)
+    global_med = (
+        sub.groupby(["base_type", "rule", "k"])["value"]
+        .median().reset_index(name="med_mre")
+    )
+
+    def _threshold_k(g):
+        """Smallest k where gain from k=2 to k >= threshold * (gain from k=2 to k=10)."""
+        ks  = sorted(g["k"].unique())
+        mre = {int(row["k"]): row["med_mre"] for _, row in g.iterrows()}
+        mre2  = mre.get(2,  np.nan)
+        mre10 = mre.get(10, np.nan)
+        if np.isnan(mre2) or np.isnan(mre10):
+            return "--"
+        total_gain = mre2 - mre10
+        if total_gain <= 0:
+            return 2  # no gain at all — k=2 already achieves everything
+        target = mre2 - threshold * total_gain  # MRE level that corresponds to `threshold` of gain
+        for k in ks:
+            if mre.get(k, np.nan) <= target:
+                return k
+        return ks[-1]  # need all learners
+
+    records = {}
+    for (bt, rule), grp in global_med.groupby(["base_type", "rule"]):
+        records[(bt, rule)] = _threshold_k(grp)
+
+    pct_label = f"{int(threshold * 100)}\\%"
+    col_spec  = "l" + "c" * len(RULES)
+    rule_header = " & ".join([f"\\textbf{{{r}}}" for r in RULES])
+
+    lines = [
+        r"\begin{tabular}{" + col_spec + "}",
+        r"\toprule",
+        r"Base type & " + rule_header + r" \\",
+        rf"\multicolumn{{{1 + len(RULES)}}}{{l}}"
+        rf"{{\footnotesize Min $k$ to capture {pct_label} of MRE gain from $k$=2 to $k$=10}} \\",
+        r"\midrule",
+    ]
+
+    for bt in base_types:
+        cells = [bt] + [str(records.get((bt, rule), "--")) for rule in RULES]
+        lines.append(" & ".join(cells) + r" \\")
+
+    lines += [
+        r"\bottomrule",
+        rf"\multicolumn{{{1 + len(RULES)}}}{{l}}{{\footnotesize "
+        rf"$k_{{\text{{thresh}}}}$: smallest $k$ where $\geq${pct_label} of the total MRE "
+        r"reduction from $k$=2 to $k$=10 is achieved (median MRE, aggregated across all datasets). "
+        r"Low value = gains plateau early; high value = more learners keep helping.} \\",
+        r"\end{tabular}",
+    ]
+    save_tex(lines, os.path.join(out_dir, "t_k_threshold.tex"))
+
+
+def generate_fixed_k(df_ens_raw, latex_dir, model_order=None, fixed_ks=(2, 5)):
+    """Table idea B: Fixed-k sensitivity table (RQ3.2).
+
+    For each base type (rules aggregated): MRE at k=optimal, and the % extra error
+    incurred by using each fixed k instead.
+
+    Rows: base types. Columns: k*(optimal) | MRE(k*) | %extra(k=2) | %extra(k=5) | %extra(k=10).
+
+    Answers: 'if I always use k=5, how much do I sacrifice per model type?'
+    A value near 0% means k=5 is fine; a larger value means you should tune k.
+    """
+    out_dir    = os.path.join(latex_dir, "t_k_summary")
+    base_types = model_order or sorted(df_ens_raw["base_type"].unique())
+
+    sub = df_ens_raw[df_ens_raw["metric"] == "MRE"].copy()
+
+    # Global median across rules AND datasets
+    global_med = (
+        sub.groupby(["base_type", "k"])["value"]
+        .median().reset_index(name="med_mre")
+    )
+
+    rows = []
+    for bt in base_types:
+        g    = global_med[global_med["base_type"] == bt]
+        k_opt = int(g.loc[g["med_mre"].idxmin(), "k"])
+        mre_opt = float(g[g["k"] == k_opt]["med_mre"].values[0])
+
+        extra = {}
+        for fk in list(fixed_ks) + [10]:
+            row = g[g["k"] == fk]
+            if row.empty:
+                extra[fk] = np.nan
+            else:
+                mre_fk = float(row["med_mre"].values[0])
+                extra[fk] = (mre_fk - mre_opt) / mre_opt * 100 if mre_opt > 0 else np.nan
+
+        rows.append({"base_type": bt, "k_opt": k_opt, "mre_opt": mre_opt, **{f"extra_k{fk}": extra[fk] for fk in list(fixed_ks) + [10]}})
+
+    df = pd.DataFrame(rows)
+
+    fk_cols  = [f"extra_k{fk}" for fk in list(fixed_ks) + [10]]
+    fk_heads = [f"\\%extra($k$={fk})" for fk in list(fixed_ks) + [10]]
+
+    col_spec = "l" + "c" * (2 + len(fk_cols))
+    lines = [
+        r"\begin{tabular}{" + col_spec + "}",
+        r"\toprule",
+        "Base type & $k^*$ & MRE($k^*$) & " + " & ".join(fk_heads) + r" \\",
+        r"\midrule",
+    ]
+
+    for _, row in df.iterrows():
+        cells = [str(row["base_type"]), str(row["k_opt"]), f"{row['mre_opt']:.3f}"]
+        for fk_col in fk_cols:
+            v = row[fk_col]
+            cells.append(f"{v:.1f}" if not np.isnan(v) else "--")
+        lines.append(" & ".join(cells) + r" \\")
+
+    n_cols = 3 + len(fk_cols)
+    lines += [
+        r"\bottomrule",
+        rf"\multicolumn{{{n_cols}}}{{l}}{{\footnotesize "
+        r"$k^*$: optimal $k$ (lowest global median MRE, aggregated across all rules and datasets). "
+        r"\%extra($k$=X): percentage MRE increase if $k$ is fixed at X instead of $k^*$ "
+        r"(0\% = no cost; larger = tuning $k$ matters more).} \\",
+        r"\end{tabular}",
+    ]
+    save_tex(lines, os.path.join(out_dir, "t_k_fixed.tex"))
