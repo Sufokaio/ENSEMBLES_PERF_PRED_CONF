@@ -44,4 +44,11 @@ from . import (
     f_gap_close2,
     f_k_sk_rank_curve,
     f_k_rank1_heatmap,
+    f_k_vs_baseline_compare,
+    f_k_pct_rank1_curve,
+    f_rq33_slope,
+    f_rq33_winner_map,
+    f_rq33_rule_rank_heatmap,
+    f_rq33_rule_bar,
+    f_rq33_rule_mre_heatmap,
 )

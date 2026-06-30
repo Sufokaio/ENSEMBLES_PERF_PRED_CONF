@@ -1,0 +1,13 @@
+\begin{tabular}{lrrrr}
+\toprule
+ & \multicolumn{4}{c}{\% triples where rank$_A \neq$ rank$_B$} \\
+\cmidrule{2-5}
+ & MRE & MAE & MBRE & MIBRE \\
+\midrule
+MRE & 0 & 35.0\% & 28.4\% & 20.3\% \\
+MAE & 35.0\% & 0 & 31.6\% & \textbf{38.4\%} \\
+MBRE & 28.4\% & 31.6\% & 0 & 28.1\% \\
+MIBRE & 20.3\% & \textbf{38.4\%} & 28.1\% & 0 \\
+\bottomrule
+\multicolumn{5}{l}{\footnotesize N = 320 (model $\times$ dataset $\times$ sample\_size) triples per metric pair.}
+\end{tabular}

@@ -1,0 +1,24 @@
+\begin{tabular}{lccccc}
+\toprule
+Competitor & MRE & MAE & MBRE & MIBRE & Mean \\ 
+\midrule
+\midrule
+HINNPerf\_E & \textbf{1.35} & \textbf{1.35} & \textbf{1.25} & \textbf{1.35} & \textbf{1.33} \\
+HINNPerf\_S & 1.93 & 1.75 & 1.70 & 2.00 & 1.84 \\
+DeepPerf\_E & 2.35 & 2.00 & 2.08 & 2.40 & 2.21 \\
+DeepPerf\_S & 2.80 & 2.50 & 2.67 & 3.00 & 2.74 \\
+RF\_E & 3.70 & 3.62 & 3.35 & 3.92 & 3.65 \\
+RT\_E & 3.65 & 3.65 & 3.60 & 3.85 & 3.69 \\
+RF\_S & 3.80 & 3.70 & 3.42 & 3.92 & 3.71 \\
+RT\_S & 3.65 & 3.73 & 3.67 & 3.85 & 3.73 \\
+KRR\_E & 4.45 & 3.77 & 3.88 & 5.00 & 4.28 \\
+KRR\_S & 4.58 & 3.90 & 4.03 & 5.15 & 4.41 \\
+SVR\_E & 5.65 & 6.80 & 5.83 & 6.25 & 6.13 \\
+KNN\_E & 6.28 & 6.22 & 6.08 & 6.05 & 6.16 \\
+KNN\_S & 6.50 & 6.58 & 6.47 & 6.22 & 6.44 \\
+SVR\_S & 6.03 & 7.33 & 6.45 & 6.62 & 6.61 \\
+LR\_E & 7.20 & 6.85 & 6.25 & 7.70 & 7.00 \\
+LR\_S & 7.70 & 7.42 & 6.72 & 8.03 & 7.47 \\
+\bottomrule
+\multicolumn{6}{l}{\footnotesize \_S = single model, \_E = best ensemble. Sorted by mean SK rank across all metrics.} \\
+\end{tabular}

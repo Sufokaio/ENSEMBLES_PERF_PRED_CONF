@@ -1,17 +1,20 @@
 """
-F_K_RANK1_HEATMAP: % of scenarios where k is in SK rank-1 group (RQ3.2) — Idea 2.
+F_K_RANK1_HEATMAP: % of scenarios where k is in global SK rank-1 group (RQ3.2) — Idea 2.
+
+SK is run GLOBALLY: all 8×3×9 = 216 (base_type, rule, k) ensembles compete
+together per (dataset, sample_size). Rank 1 = globally best ensemble group.
 
 Three-panel figure (one per rule: MEAN / IRWM / NN).
 Rows = base_type (8), columns = k (2..10).
-Color = % of scenarios where this (base_type, rule, k) combination is in
-the statistically best SK group (rank 1).
+Color = % of scenarios where this (base_type, rule, k) lands in the globally best SK group.
 
 Reading key:
-  Dark cell  → this k is almost always statistically best for this model+rule
-  Light cell → this k rarely reaches the best group
-  Horizontal band of dark cells = the statistically safe k range
+  Dark cell  → this (model, k) is in the globally best group in most scenarios
+  Light cell → rarely globally competitive
+  No cell should be dark for weak models (LR, SVR) — they are outclassed globally
 
-Input: k_sk_ranks DataFrame [base_type, rule, dataset, sample_size, k, sk_rank]
+Input: k_sk_ranks DataFrame from compute_k_sk_ranks_global
+  [base_type, rule, dataset, sample_size, k, sk_rank]
 """
 import os
 import numpy as np
@@ -94,26 +97,26 @@ def _draw(pct_mats, base_types, ks, out_dir, fname, suptitle):
     save_figure(fig, os.path.join(out_dir, fname))
 
 
-def generate(k_sk_ranks, figures_dir, model_order=None):
+def generate(k_sk_ranks, figures_dir, model_order=None, suffix=""):
     """% rank-1 heatmap — all scenarios."""
     out_dir    = os.path.join(figures_dir, "f_k_rank1_heatmap")
     base_types = model_order or sorted(k_sk_ranks["base_type"].unique())
     ks         = sorted(k_sk_ranks["k"].unique())
     pct_mats   = _pct_rank1(k_sk_ranks, base_types, ks, RULES)
+    tag = f" [{suffix.strip('_')}]" if suffix else ""
     _draw(pct_mats, base_types, ks, out_dir,
-          fname="f_k_rank1_heatmap_all.pdf",
-          suptitle="% of scenarios where $k$ is in the statistically best SK group "
-                   "— all 40 scenarios (RQ3.2)")
+          fname=f"f_k_rank1_heatmap_all{suffix}.pdf",
+          suptitle=f"% in best SK group — 40 scenarios{tag} (RQ3.2)")
 
 
-def generate_s1(k_sk_ranks, figures_dir, model_order=None):
+def generate_s1(k_sk_ranks, figures_dir, model_order=None, suffix=""):
     """% rank-1 heatmap — S1 scenarios only."""
     out_dir    = os.path.join(figures_dir, "f_k_rank1_heatmap")
     base_types = model_order or sorted(k_sk_ranks["base_type"].unique())
     sub_s1     = _s1_filter(k_sk_ranks)
     ks         = sorted(sub_s1["k"].unique())
     pct_mats   = _pct_rank1(sub_s1, base_types, ks, RULES)
+    tag = f" [{suffix.strip('_')}]" if suffix else ""
     _draw(pct_mats, base_types, ks, out_dir,
-          fname="f_k_rank1_heatmap_s1.pdf",
-          suptitle="% of S1 scenarios where $k$ is in the statistically best SK group "
-                   "(RQ3.2)")
+          fname=f"f_k_rank1_heatmap_s1{suffix}.pdf",
+          suptitle=f"% in best SK group — S1{tag} (RQ3.2)")

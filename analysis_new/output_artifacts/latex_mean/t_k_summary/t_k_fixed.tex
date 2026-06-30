@@ -1,0 +1,15 @@
+\begin{tabular}{lccccc}
+\toprule
+Base type & $k^*$ & MRE($k^*$) & \%extra($k$=2) & \%extra($k$=5) & \%extra($k$=10) \\
+\midrule
+LR & 4 & 21.078 & 6.5 & 0.9 & 3.6 \\
+SVR & 4 & 18.866 & 0.5 & 0.1 & 1.5 \\
+RT & 3 & 8.928 & 0.7 & 4.3 & 19.3 \\
+RF & 8 & 8.868 & 1.3 & 0.2 & 0.4 \\
+KNN & 5 & 19.418 & 1.7 & 0.0 & 3.0 \\
+KRR & 7 & 10.901 & 1.4 & 0.1 & 0.6 \\
+DeepPerf & 4 & 5.891 & 0.4 & 0.7 & 11.8 \\
+HINNPerf & 7 & 5.355 & 2.7 & 0.0 & 1.8 \\
+\bottomrule
+\multicolumn{6}{l}{\footnotesize $k^*$: optimal $k$ (lowest global median MRE, aggregated across all rules and datasets). \%extra($k$=X): percentage MRE increase if $k$ is fixed at X instead of $k^*$ (0\% = no cost; larger = tuning $k$ matters more).} \\
+\end{tabular}

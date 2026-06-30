@@ -227,12 +227,10 @@ def compute_cross_win_matrix(df_singles_best, df_ens_best_rq2,
 
 
 def compute_k_sk_ranks(df_ens_raw, metric="MRE"):
-    """Run SK per (base_type, rule, dataset, sample_size) on k=2..10 treatments.
+    """Within-model SK: for each (base_type, rule, dataset, sample_size), compare k=2..10.
 
-    Returns a long DataFrame:
-      [base_type, rule, dataset, sample_size, k, sk_rank]
-    where sk_rank is the Scott-Knott group rank for each k within that scenario
-    (rank 1 = statistically best group).  Used by RQ3.2 statistical plots.
+    Answers "does k matter for LR MEAN?" — NOT globally competitive.
+    Kept for reference; RQ3.2 plots use compute_k_sk_ranks_global instead.
     """
     from .sk_impl import scott_knott
 
@@ -263,6 +261,61 @@ def compute_k_sk_ranks(df_ens_raw, metric="MRE"):
             pass
 
     return pd.DataFrame(rows)
+
+
+def compute_k_sk_ranks_perrule(df_ens_raw, metric="MRE"):
+    """Per-rule SK: for each (rule, dataset, sample_size), SK on 8 base_types × 9 k = 72 competitors.
+
+    Answers "within MEAN ensembles, where does LR k=5 rank vs HINNPerf k=8?"
+    Isolates k effect within a fixed rule — base_type competition is real,
+    but rule effects don't contaminate the ranking.
+    Returns [base_type, rule, dataset, sample_size, k, sk_rank].
+    """
+    from .sk_borda import run_sk_on_df
+
+    sub = df_ens_raw[df_ens_raw["metric"] == metric].copy()
+    rows = []
+    for rule in sub["rule"].unique():
+        rule_sub = sub[sub["rule"] == rule].copy()
+        rule_sub["competitor"] = (
+            rule_sub["base_type"].astype(str) + "_k" + rule_sub["k"].astype(str)
+        )
+        sk = run_sk_on_df(rule_sub, group_col="competitor", metrics=[metric])
+        meta = rule_sub[["competitor", "base_type", "k"]].drop_duplicates()
+        sk = sk.merge(meta, on="competitor")
+        sk["rule"] = rule
+        rows.append(sk[["base_type", "rule", "dataset", "sample_size", "k", "sk_rank"]])
+
+    return pd.concat(rows, ignore_index=True)
+
+
+def compute_k_sk_ranks_global(df_ens_raw, metric="MRE"):
+    """Global SK: all (base_type, rule, k) ensembles compete together per (dataset, sample_size).
+
+    For each (dataset, sample_size), runs ONE SK test on all 8×3×9 = 216 competitors.
+    Returns [base_type, rule, dataset, sample_size, k, sk_rank].
+
+    This is the correct design for RQ3.2: rank 1 = globally best ensemble group,
+    so you can ask "where does LR MEAN k=5 rank among ALL ensembles?"
+    """
+    from .sk_borda import run_sk_on_df
+
+    sub = df_ens_raw[df_ens_raw["metric"] == metric].copy()
+    sub["competitor"] = (
+        sub["base_type"].astype(str) + "_" +
+        sub["rule"].astype(str) + "_k" +
+        sub["k"].astype(str)
+    )
+
+    sk = run_sk_on_df(sub, group_col="competitor", metrics=[metric])
+
+    meta = sub[["competitor", "base_type", "rule", "k"]].drop_duplicates()
+    sk   = sk.merge(meta, on="competitor")
+
+    return (
+        sk[["base_type", "rule", "dataset", "sample_size", "k", "sk_rank"]]
+        .reset_index(drop=True)
+    )
 
 
 def _wilson_ci(successes, total, alpha=0.05):

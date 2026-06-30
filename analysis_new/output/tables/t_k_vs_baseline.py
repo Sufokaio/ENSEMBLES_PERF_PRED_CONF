@@ -68,7 +68,7 @@ def _build_table(pct_dict, base_types, ks_compare, rule, note=""):
     return rows
 
 
-def generate(k_sk_ranks, latex_dir, model_order=None):
+def generate(k_sk_ranks, latex_dir, model_order=None, suffix=""):
     """Three sub-tables (one per rule), all 40 scenarios."""
     out_dir    = os.path.join(latex_dir, "t_k_vs_baseline")
     base_types = model_order or sorted(k_sk_ranks["base_type"].unique())
@@ -97,16 +97,15 @@ def generate(k_sk_ranks, latex_dir, model_order=None):
             r"100 = always beats $k$=2.}} \\",
             r"\end{tabular}",
         ]
-        fname = f"t_k_vs_baseline_{rule.lower()}.tex"
+        fname = f"t_k_vs_baseline_{rule.lower()}{suffix}.tex"
         save_tex(lines, os.path.join(out_dir, fname))
 
-    # Also produce one merged table: rows = (base_type, rule), 3 rule groups
     _generate_merged(pct, base_types, ks_compare, out_dir,
-                     fname="t_k_vs_baseline_merged.tex",
+                     fname=f"t_k_vs_baseline_merged{suffix}.tex",
                      n_scenarios=40)
 
 
-def generate_s1(k_sk_ranks, latex_dir, model_order=None):
+def generate_s1(k_sk_ranks, latex_dir, model_order=None, suffix=""):
     """Three sub-tables + merged, S1 scenarios only."""
     out_dir    = os.path.join(latex_dir, "t_k_vs_baseline")
     base_types = model_order or sorted(k_sk_ranks["base_type"].unique())
@@ -134,10 +133,10 @@ def generate_s1(k_sk_ranks, latex_dir, model_order=None):
             r"better SK group than $k$=2.}} \\",
             r"\end{tabular}",
         ]
-        save_tex(lines, os.path.join(out_dir, f"t_k_vs_baseline_s1_{rule.lower()}.tex"))
+        save_tex(lines, os.path.join(out_dir, f"t_k_vs_baseline_s1_{rule.lower()}{suffix}.tex"))
 
     _generate_merged(pct, base_types, ks_compare, out_dir,
-                     fname="t_k_vs_baseline_s1_merged.tex",
+                     fname=f"t_k_vs_baseline_s1_merged{suffix}.tex",
                      n_scenarios=8)
 
 

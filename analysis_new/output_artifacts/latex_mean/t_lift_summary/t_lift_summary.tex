@@ -1,0 +1,15 @@
+\begin{tabular}{lccccccc}
+\toprule
+Model & $\bar{r}_S$ & $\bar{r}_E$ & $\Delta r$ & $b_S$ & $b_E$ & $\Delta b$ & DS wins (\%) \\
+\midrule
+HINNPerf & 1.93 & 1.35 & \textbf{-0.57} & 2 & 1 & \textbf{-1.0} & 75\% \\
+LR & 7.70 & 7.20 & -0.50 & 16 & 15 & \textbf{-1.0} & 50\% \\
+DeepPerf & 2.80 & 2.35 & -0.45 & 4 & 3 & \textbf{-1.0} & 50\% \\
+SVR & 6.03 & 5.65 & -0.38 & 12 & 11 & \textbf{-1.0} & 62\% \\
+KNN & 6.50 & 6.28 & -0.22 & 14 & 13 & \textbf{-1.0} & 50\% \\
+KRR & 4.58 & 4.45 & -0.12 & 10 & 9 & \textbf{-1.0} & 25\% \\
+RF & 3.80 & 3.70 & -0.10 & 8 & 7 & \textbf{-1.0} & 50\% \\
+RT & 3.65 & 3.65 & +0.00 & 6 & 6 & +0.0 & 0\% \\
+\bottomrule
+\multicolumn{8}{l}{\footnotesize $\bar{r}_S$/$\bar{r}_E$: mean SK rank (MRE) of single/ensemble in the mixed 16-competitor ranking. $\Delta r = \bar{r}_E - \bar{r}_S$ (negative = ensemble improved). $b_S$/$b_E$: Borda rank among 16 competitors. DS wins: \% of 8 datasets where ensemble has lower mean SK rank than single. Sorted by $\Delta r$.} \\
+\end{tabular}

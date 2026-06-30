@@ -1,0 +1,16 @@
+\begin{tabular}{lcccccccc|cccccccc|cccccccc}
+\toprule
+Base type & \multicolumn{8}{c}{\textbf{MEAN}} & \multicolumn{8}{c}{\textbf{IRWM}} & \multicolumn{8}{c}{\textbf{NN}} \\
+& $k$=3 & $k$=4 & $k$=5 & $k$=6 & $k$=7 & $k$=8 & $k$=9 & $k$=10 & $k$=3 & $k$=4 & $k$=5 & $k$=6 & $k$=7 & $k$=8 & $k$=9 & $k$=10 & $k$=3 & $k$=4 & $k$=5 & $k$=6 & $k$=7 & $k$=8 & $k$=9 & $k$=10 \\
+\midrule
+LR & 10 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 8 & 25 & 22 & 25 & 25 & 25 & 25 & 25 \\
+SVR & 0 & 2 & 2 & 2 & 2 & 2 & 2 & 2 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 2 & 8 & 10 & 10 & 12 & 12 & 25 & 28 \\
+RT & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 5 & 0 & 0 & 0 & 0 & 0 & 0 & 12 & 18 & 15 & 8 & 10 & 12 & 12 & 10 \\
+RF & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 12 & 18 & 20 & 22 & 20 & 20 & 22 & 22 \\
+KNN & 2 & 8 & 12 & 12 & 18 & 18 & 18 & 15 & 5 & 8 & 12 & 12 & 18 & 18 & 18 & 18 & 0 & 5 & 8 & 10 & 10 & 10 & 8 & 8 \\
+KRR & 8 & 10 & 8 & 8 & 8 & 10 & 10 & 10 & 5 & 5 & 5 & 8 & 8 & 10 & 10 & 10 & 15 & 22 & 22 & 22 & 22 & 25 & 25 & 25 \\
+DeepPerf & 5 & 15 & 25 & 25 & 30 & 30 & 25 & 22 & 2 & 18 & 28 & 28 & 28 & 28 & 28 & 28 & 8 & 10 & 12 & 10 & 8 & 8 & 8 & 2 \\
+HINNPerf & 28 & 35 & 35 & 35 & 35 & 32 & 30 & 22 & 5 & 32 & 32 & 32 & 32 & 32 & 30 & 30 & 5 & 15 & 15 & 15 & 15 & 18 & 18 & 12 \\
+\bottomrule
+\multicolumn{25}{l}{\footnotesize Values = \% of 40 evaluation scenarios where $k$ is in a statistically better SK group than $k$=2 (lower SK rank = better). 0 = never beats $k$=2; 100 = always beats $k$=2.}} \\
+\end{tabular}
