@@ -21,9 +21,15 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-from .plot_utils import RULE_COLORS, RULE_MARKERS, save_figure
+from .plot_utils import RULE_COLORS, RULE_MARKERS, MODEL_COLORS, save_figure
 
 RULES = ["MEAN", "IRWM", "NN"]
+
+BASE_MARKERS = {
+    "LR":       "o", "SVR":  "s", "RT":       "^",
+    "RF":       "D", "KNN":  "v", "KRR":      "P",
+    "DeepPerf": "X", "HINNPerf": "*",
+}
 
 
 def _s1_filter(df):
@@ -101,3 +107,69 @@ def generate_s1(k_sk_ranks, figures_dir, model_order=None, suffix=""):
           fname=f"f_k_sk_rank_curve_s1{suffix}.pdf",
           suptitle=f"Mean SK rank vs $k$ -- S1 per dataset{tag} (RQ3.2)\n"
                    "Dashed line at 1 = best group threshold")
+
+
+def _draw_byrule(mean_sk, base_types, ks, out_dir, fname, suptitle):
+    """3 panels (one per rule), 8 lines (one per base type), y = mean SK rank."""
+    fig, axes = plt.subplots(1, 3, figsize=(12.0, 3.6), squeeze=False)
+
+    for col, rule in enumerate(RULES):
+        ax        = axes[0][col]
+        rule_data = mean_sk[mean_sk["rule"] == rule]
+
+        # Dashed line at best mean SK rank achieved by any base_type in this rule
+        best_rank = rule_data["sk_rank"].min() if not rule_data.empty else 1.0
+        ax.axhline(best_rank, color="#888888", linewidth=0.9,
+                   linestyle="--", zorder=0, label="_nolegend_")
+
+        for bt in base_types:
+            bt_data = rule_data[rule_data["base_type"] == bt].sort_values("k")
+            ax.plot(bt_data["k"], bt_data["sk_rank"],
+                    color=MODEL_COLORS.get(bt, "#333"),
+                    marker=BASE_MARKERS.get(bt, "o"),
+                    markersize=4, linewidth=1.4, label=bt)
+
+        ax.set_title(rule, fontsize=10, fontweight="bold")
+        ax.set_xlabel("$k$")
+        if col == 0:
+            ax.set_ylabel("Mean SK rank (within rule)")
+        ax.set_xticks(ks)
+        ax.set_xticklabels([str(k) for k in ks], fontsize=7)
+        ax.invert_yaxis()
+        ax.grid(True, alpha=0.2)
+
+    handles, labels = axes[0][0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc="lower right", fontsize=8,
+               title="Base type", ncol=2)
+    fig.suptitle(suptitle, fontsize=9)
+    fig.tight_layout()
+    save_figure(fig, os.path.join(out_dir, fname))
+
+
+def generate_byrule(k_sk_ranks, figures_dir, model_order=None, suffix=""):
+    """3 panels (per rule), 8 lines (per base type) — all 40 scenarios."""
+    out_dir    = os.path.join(figures_dir, "f_k_sk_rank_curve")
+    base_types = model_order or sorted(k_sk_ranks["base_type"].unique())
+    mean_sk    = (k_sk_ranks
+                  .groupby(["base_type", "rule", "k"])["sk_rank"]
+                  .mean().reset_index())
+    ks  = sorted(mean_sk["k"].unique())
+    tag = f" [{suffix.strip('_')}]" if suffix else ""
+    _draw_byrule(mean_sk, base_types, ks, out_dir,
+                 fname=f"f_k_sk_rank_curve_all{suffix}_byrule.pdf",
+                 suptitle=f"Mean SK rank vs $k$ per rule — 8 base types{tag} (all 40 scenarios, RQ3.2)")
+
+
+def generate_s1_byrule(k_sk_ranks, figures_dir, model_order=None, suffix=""):
+    """3 panels (per rule), 8 lines (per base type) — S1 only."""
+    out_dir    = os.path.join(figures_dir, "f_k_sk_rank_curve")
+    base_types = model_order or sorted(k_sk_ranks["base_type"].unique())
+    sub_s1     = _s1_filter(k_sk_ranks)
+    mean_sk    = (sub_s1
+                  .groupby(["base_type", "rule", "k"])["sk_rank"]
+                  .mean().reset_index())
+    ks  = sorted(mean_sk["k"].unique())
+    tag = f" [{suffix.strip('_')}]" if suffix else ""
+    _draw_byrule(mean_sk, base_types, ks, out_dir,
+                 fname=f"f_k_sk_rank_curve_s1{suffix}_byrule.pdf",
+                 suptitle=f"Mean SK rank vs $k$ per rule — 8 base types{tag} (S1 per dataset, RQ3.2)")

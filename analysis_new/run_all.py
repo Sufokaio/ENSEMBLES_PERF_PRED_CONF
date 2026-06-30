@@ -527,6 +527,10 @@ def stage_figures(sel_agg="median"):
     f_k_elbow.generate_mean(df_ens_raw, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
     print("F_K_ELBOW mean S1 (per-dataset min sample size) …")
     f_k_elbow.generate_s1_mean(df_ens_raw, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
+    print("F_K_ELBOW mean by-rule (3 panels × 8 base-type lines) …")
+    f_k_elbow.generate_mean_byrule(df_ens_raw, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
+    print("F_K_ELBOW mean by-rule S1 …")
+    f_k_elbow.generate_s1_mean_byrule(df_ens_raw, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
     print("F_K_ELBOW_DATASET: MRE vs k per dataset (by rule) …")
     f_k_elbow_dataset.generate(
         df_ens_raw, _out_dir(cfg.FIGURES_DIR), dataset_order=dataset_order
@@ -547,6 +551,8 @@ def stage_figures(sel_agg="median"):
     for data, sfx in [(k_sk_ranks, "_global"), (k_sk_ranks_pr, "_perrule")]:
         f_k_sk_rank_curve.generate(data, _out_dir(cfg.FIGURES_DIR), model_order=model_order, suffix=sfx)
         f_k_sk_rank_curve.generate_s1(data, _out_dir(cfg.FIGURES_DIR), model_order=model_order, suffix=sfx)
+        f_k_sk_rank_curve.generate_byrule(data, _out_dir(cfg.FIGURES_DIR), model_order=model_order, suffix=sfx)
+        f_k_sk_rank_curve.generate_s1_byrule(data, _out_dir(cfg.FIGURES_DIR), model_order=model_order, suffix=sfx)
         f_k_rank1_heatmap.generate(data, _out_dir(cfg.FIGURES_DIR), model_order=model_order, suffix=sfx)
         f_k_rank1_heatmap.generate_s1(data, _out_dir(cfg.FIGURES_DIR), model_order=model_order, suffix=sfx)
         f_k_pct_rank1_curve.generate(data, _out_dir(cfg.FIGURES_DIR), model_order=model_order, suffix=sfx)
