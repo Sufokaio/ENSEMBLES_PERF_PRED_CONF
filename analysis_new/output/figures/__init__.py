@@ -51,4 +51,5 @@ from . import (
     f_rq33_rule_rank_heatmap,
     f_rq33_rule_bar,
     f_rq33_rule_mre_heatmap,
+    f_rq33_combined_heatmap,
 )

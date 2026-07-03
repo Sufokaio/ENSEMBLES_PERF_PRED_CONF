@@ -266,6 +266,7 @@ def stage_tables(sel_agg="median"):
     wtl_median        = _load("wtl_median")
     wtl_mean          = _load("wtl_mean")
     sk_mixed          = _load("sk_mixed")
+    df_base           = _load("baseline")
     cross_win_raw     = _load("cross_win_matrix")
 
     model_order = cfg.MODEL_TYPES
@@ -291,7 +292,8 @@ def stage_tables(sel_agg="median"):
         df_singles_best, df_ens_best_rq2,
         sk_singles, borda_gl_singles,
         sk_ens_rq31_raw, borda_gl_ens_for_t4,
-        _out_dir(cfg.LATEX_DIR), model_order=model_order
+        _out_dir(cfg.LATEX_DIR), model_order=model_order,
+        df_baseline=df_base, sk_mixed=sk_mixed
     )
 
     print("T5: rule battle royale …")
@@ -376,7 +378,7 @@ def stage_figures(sel_agg="median"):
         f_k_vs_baseline_compare, f_k_pct_rank1_curve,
         f_rq33_slope, f_rq33_winner_map,
         f_rq33_rule_rank_heatmap, f_rq33_rule_bar,
-        f_rq33_rule_mre_heatmap,
+        f_rq33_rule_mre_heatmap, f_rq33_combined_heatmap,
     )
 
     df_singles_best    = _load("singles_best")
@@ -498,6 +500,9 @@ def stage_figures(sel_agg="median"):
     print("F_RQ33_RULE_MRE_HEATMAP: mean MRE heatmap per (base type, rule) (RQ3.3) …")
     f_rq33_rule_mre_heatmap.generate(df_ens_rq33, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
     f_rq33_rule_mre_heatmap.generate_s1(df_ens_rq33, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
+    print("F_RQ33_COMBINED_HEATMAP: MRE + SK rank combined heatmap (RQ3.3) …")
+    f_rq33_combined_heatmap.generate(sk_rq33_fig, df_ens_rq33, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
+    f_rq33_combined_heatmap.generate_s1(sk_rq33_fig, df_ens_rq33, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
 
     print("F_LIFT_SCATTER: SK rank lift single→ensemble …")
     f_lift_scatter.generate(sk_mixed, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
