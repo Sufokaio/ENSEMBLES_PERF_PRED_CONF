@@ -44,6 +44,17 @@ RULE_COLORS = {
 RULE_MARKERS = {"MEAN": "o", "IRWM": "s", "NN": "^"}
 
 
+DS_DISPLAY = {
+    "apache": "APACHE", "bdbc": "BDBC", "dune": "DUNE",
+    "hipacc": "HIPACC", "hsmgp": "HSMGP", "kanzi": "KANZI",
+    "lrzip": "LRZIP", "x264": "X264",
+}
+
+
+def ds_label(name):
+    return DS_DISPLAY.get(name.lower(), name.upper())
+
+
 def get_model_color(name):
     return MODEL_COLORS.get(name, "#333333")
 

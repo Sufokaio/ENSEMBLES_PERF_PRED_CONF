@@ -244,14 +244,9 @@ def stage_tables(sel_agg="median"):
     """sel_agg controls both which caches are loaded (via _SEL_SUFFIX) and
     the display aggregation in table cells."""
     print(f"\n=== STAGE: tables (sel_agg={sel_agg}, suffix='{_SEL_SUFFIX}') ===")
+    # FINAL SET ONLY — imports trimmed to what is actually generated
     from output.tables import (
-        t1_singles_rank, t3_ensemble_wtl,
-        t4_lift, t5_rule_battle,
-        t7_disagree_matrix, t8_k_compare,
-        t_sk_count, t_combined_rank, t_cross_win,
-        t_combined_rank_dataset, t_lift_summary,
-        t_k_summary,
-        t_k_vs_baseline,
+        t1_singles_rank, t3_ensemble_wtl, t4_lift,
     )
 
     df_singles_best   = _load("singles_best")
@@ -259,33 +254,29 @@ def stage_tables(sel_agg="median"):
     borda_pm_singles  = _load("borda_per_metric_singles")
     borda_gl_singles  = _load("borda_global_singles")
     df_ens_best_rq2   = _load("ensembles_best_rq2")
-    df_ens_rq33       = _load("ensembles_best_rq33")
     sk_ens_rq31_raw   = _load("sk_ens_rq31")
-    sk_rq33           = _load("sk_rq33")
     borda_gl_ens_rq31 = _load("borda_global_ens_rq31")
-    wtl_median        = _load("wtl_median")
     wtl_mean          = _load("wtl_mean")
     sk_mixed          = _load("sk_mixed")
     df_base           = _load("baseline")
-    cross_win_raw     = _load("cross_win_matrix")
 
     model_order = cfg.MODEL_TYPES
 
-    print("T1: singles rank table …")
+    # ── FINAL: RQ1 ──────────────────────────────────────────────────────────
+    print("T1 (mean, all): singles rank table …")
     t1_singles_rank.generate(
         df_singles_best, sk_singles, borda_pm_singles, borda_gl_singles,
         _out_dir(cfg.LATEX_DIR), model_order=model_order
     )
 
-    print("T3: ensemble W/T/L …")
-    t3_ensemble_wtl.generate(wtl_median, _out_dir(cfg.LATEX_DIR), model_order=model_order, agg_label="median")
-    t3_ensemble_wtl.generate(wtl_mean,   _out_dir(cfg.LATEX_DIR), model_order=model_order, agg_label="mean")
+    # ── FINAL: RQ2 ──────────────────────────────────────────────────────────
+    print("T3 (winrate, mean): ensemble W/T/L …")
+    t3_ensemble_wtl.generate(wtl_mean, _out_dir(cfg.LATEX_DIR), model_order=model_order, agg_label="mean")
+    # t3_ensemble_wtl.generate(wtl_median, ..., agg_label="median")  # not in final paper
+    # t3_ensemble_wtl.generate_sk_diff(...)  # not in final paper
 
-    print("T3-SK: SK rank difference (mixed) …")
-    t3_ensemble_wtl.generate_sk_diff(sk_mixed, _out_dir(cfg.LATEX_DIR), model_order=model_order)
-
-    print("T4: ensemble rank table (T4b only) …")
-    sk_ens_rq31 = sk_ens_rq31_raw.rename(columns={"model_type": "base_type"})
+    # ── FINAL: RQ3.1 ────────────────────────────────────────────────────────
+    print("T4b (mean): ensemble base-type rank table …")
     borda_gl_ens_for_t4 = borda_gl_ens_rq31.rename(columns={"base_type": "model_type"})
     _, borda_gl_ens_full = _compute_borda_from_sk(sk_ens_rq31_raw, "model_type")
     t4_lift.generate(
@@ -296,52 +287,20 @@ def stage_tables(sel_agg="median"):
         df_baseline=df_base, sk_mixed=sk_mixed
     )
 
-    print("T5: rule battle royale …")
-    t5_rule_battle.generate(df_ens_rq33, sk_rq33, _out_dir(cfg.LATEX_DIR), model_order=model_order)
-
-    print("T7: metric rank disagreement matrix …")
-    t7_disagree_matrix.generate(df_singles_best, _out_dir(cfg.LATEX_DIR), model_order=model_order)
-
-    print("T8: k=2 vs k=best vs k=10 sensitivity …")
-    t8_k_compare.generate(
-        _load("ensembles_raw"), _out_dir(cfg.LATEX_DIR), model_order=model_order, sel_agg=sel_agg
-    )
-
-    print("T_SK_COUNT: SK cluster membership counts …")
-    t_sk_count.generate(sk_singles, _out_dir(cfg.LATEX_DIR), model_order=model_order)
-
-    print("T_COMBINED_RANK: mixed singles+ensembles SK rank table …")
-    t_combined_rank.generate(sk_mixed, _out_dir(cfg.LATEX_DIR), model_order=model_order)
-
-    print("T_CROSS_WIN: cross-level win matrix …")
-    t_cross_win.generate(cross_win_raw, _out_dir(cfg.LATEX_DIR), model_order=model_order)
-
-    print("T_COMBINED_RANK_DATASET: per-dataset breakdown of mixed SK ranking …")
-    t_combined_rank_dataset.generate(
-        sk_mixed, _out_dir(cfg.LATEX_DIR),
-        model_order=model_order, dataset_order=sorted(df_singles_best["dataset"].unique())
-    )
-
-    print("T_LIFT_SUMMARY: ensemble vs single lift summary …")
-    t_lift_summary.generate(sk_mixed, _out_dir(cfg.LATEX_DIR), model_order=model_order)
-
-    print("T_K_SUMMARY: optimal k tabular summary (by base type × rule) …")
-    t_k_summary.generate(_load("ensembles_raw"), _out_dir(cfg.LATEX_DIR), model_order=model_order)
-    print("T_K_SUMMARY by base type (rules aggregated) …")
-    t_k_summary.generate_by_base(_load("ensembles_raw"), _out_dir(cfg.LATEX_DIR), model_order=model_order)
-    print("T_K_VS_BASELINE: %% scenarios statistically better than k=2 (global 216) …")
-    k_sk_ranks = _load("k_sk_ranks")
-    t_k_vs_baseline.generate(k_sk_ranks, _out_dir(cfg.LATEX_DIR), model_order=model_order, suffix="_global")
-    t_k_vs_baseline.generate_s1(k_sk_ranks, _out_dir(cfg.LATEX_DIR), model_order=model_order, suffix="_global")
-    print("T_K_VS_BASELINE per-rule (72) …")
-    k_sk_ranks_pr = _load("k_sk_ranks_perrule")
-    t_k_vs_baseline.generate(k_sk_ranks_pr, _out_dir(cfg.LATEX_DIR), model_order=model_order, suffix="_perrule")
-    t_k_vs_baseline.generate_s1(k_sk_ranks_pr, _out_dir(cfg.LATEX_DIR), model_order=model_order, suffix="_perrule")
-
-    print("T_K_THRESHOLD: min k to capture 90%% of gain …")
-    t_k_summary.generate_threshold(_load("ensembles_raw"), _out_dir(cfg.LATEX_DIR), model_order=model_order)
-    print("T_K_FIXED: % extra error at fixed k vs optimal …")
-    t_k_summary.generate_fixed_k(_load("ensembles_raw"), _out_dir(cfg.LATEX_DIR), model_order=model_order)
+    # ── NOT IN FINAL PAPER (commented out) ──────────────────────────────────
+    # t5_rule_battle.generate(...)
+    # t7_disagree_matrix.generate(...)
+    # t8_k_compare.generate(...)
+    # t_sk_count.generate(...)
+    # t_combined_rank.generate(...)
+    # t_cross_win.generate(...)
+    # t_combined_rank_dataset.generate(...)
+    # t_lift_summary.generate(...)
+    # t_k_summary.generate(...)
+    # t_k_summary.generate_by_base(...)
+    # t_k_vs_baseline.generate(...)   (global and per-rule, all/s1)
+    # t_k_summary.generate_threshold(...)
+    # t_k_summary.generate_fixed_k(...)
 
     print("All tables done.")
 
@@ -356,298 +315,111 @@ def stage_figures(sel_agg="median"):
     """sel_agg is passed through to individual figure generators that produce
     both median and mean display variants (mirrors conf-repo _t5/_t6/_t7 loops)."""
     print(f"\n=== STAGE: figures (display_agg={sel_agg}) ===")
+    # FINAL SET ONLY — imports trimmed to what is actually generated
     from output.figures import (
-        f1_singles_heatmap, f2_ensemble_gain,
-        f4_wtl_bars, f6_mibre_mre_scatter,
-        f7_forest_plot, f8_cd_diagram,
-        f10_samplesize_trend, f12_gain_4metric,
-        f13_sa_lift_heatmap, f14_d_forest_rq2, f15_winrate_heatmap,
-        f17_type_rule_heatmap, f18_k_marginal,
-        f21_rule_samplesize, f22_nn_scatter,
-        f_lift_scatter, f_gap_close, f_borda_mixed,
-        f_k_heatmap, f_k_box, f_k_elbow,
-        f_rule_violin, f_rule_metric_heatmap,
-        f_k_elbow_dataset,
-        f_rank_stability, f_mre_abs_heatmap, f_dataset_champion,
-        f_metric_disagree_dataset, f_profile_lines,
-        f_model_dataset_rank, f_rank_flip_heatmap,
-        f_4metric_heatmap, f_dataset_rank_profiles,
-        f_bump_chart, f_metric_consistency,
-        f_gap_close2,
-        f_k_sk_rank_curve, f_k_rank1_heatmap,
-        f_k_vs_baseline_compare, f_k_pct_rank1_curve,
-        f_rq33_slope, f_rq33_winner_map,
-        f_rq33_rule_rank_heatmap, f_rq33_rule_bar,
-        f_rq33_rule_mre_heatmap, f_rq33_combined_heatmap,
+        f1_singles_heatmap, f14_d_forest_rq2,
+        f_gap_close, f_mre_abs_heatmap,
+        f_k_sk_rank_curve,
+        f_rq33_combined_heatmap,
     )
 
-    df_singles_best    = _load("singles_best")
-    df_ens_best_rq2    = _load("ensembles_best_rq2")
-    df_ens_rq33        = _load("ensembles_best_rq33")
-    sk_rq33_fig        = _load("sk_rq33")
-    df_ens_raw         = _load("ensembles_raw")
-    df_base            = _load("baseline")
-    borda_ds_singles   = _load("borda_per_dataset_singles")
-    sk_singles         = _load("sk_singles")
-    wtl_median         = _load("wtl_median")
-    sk_mixed           = _load("sk_mixed")
+    df_singles_best  = _load("singles_best")
+    df_ens_best_rq2  = _load("ensembles_best_rq2")
+    df_ens_rq33      = _load("ensembles_best_rq33")
+    sk_rq33_fig      = _load("sk_rq33")
+    df_base          = _load("baseline")
+    sk_singles       = _load("sk_singles")
+    sk_mixed         = _load("sk_mixed")
 
     model_order   = cfg.MODEL_TYPES
     dataset_order = sorted(df_singles_best["dataset"].unique())
 
-    print("F1: per-dataset rank heatmap …")
-    f1_singles_heatmap.generate(
-        borda_ds_singles, _out_dir(cfg.FIGURES_DIR),
-        model_order=model_order, dataset_order=dataset_order
-    )
-    print("F1-S1: S1-only heatmap …")
+    # ── FINAL: RQ1 ──────────────────────────────────────────────────────────
+    # f1_singles_heatmap.generate(...)  # not in final paper (all-scenarios Borda heatmap)
+    print("F1-S1: rank heatmap S1 …")
     f1_singles_heatmap.generate_s1(
         sk_singles, _out_dir(cfg.FIGURES_DIR),
         model_order=model_order, dataset_order=dataset_order
     )
 
-    print("F2: ensemble gain heatmap (MRE) …")
-    f2_ensemble_gain.generate(
-        df_singles_best, df_ens_best_rq2, _out_dir(cfg.FIGURES_DIR),
-        model_order=model_order, dataset_order=dataset_order
-    )
-    print("F2-S1: S1-only gain heatmap …")
-    f2_ensemble_gain.generate_s1(
-        df_singles_best, df_ens_best_rq2, _out_dir(cfg.FIGURES_DIR),
-        model_order=model_order, dataset_order=dataset_order
-    )
-
-    print("F4a: W/T/L bars …")
-    f4_wtl_bars.generate_f4a(wtl_median, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
-
-    print("F6: MIBRE vs. MRE scatter …")
-    f6_mibre_mre_scatter.generate(
-        df_singles_best, _out_dir(cfg.FIGURES_DIR), model_order=model_order
-    )
-
-    print("F7: forest plot …")
-    f7_forest_plot.generate(df_singles_best, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
-
-    print("F8: CD diagrams (3 variants) …")
-    f8_cd_diagram.generate(
-        df_singles_best, df_ens_best_rq2, df_ens_rq33,
-        _out_dir(cfg.FIGURES_DIR), model_order=model_order
-    )
-
-    print("F10: sample-size trend …")
-    f10_samplesize_trend.generate(
-        df_singles_best, df_ens_best_rq2, _out_dir(cfg.FIGURES_DIR), model_order=model_order
-    )
-
-    print("F12: 4-metric gain heatmap …")
-    f12_gain_4metric.generate(
-        df_singles_best, df_ens_best_rq2, _out_dir(cfg.FIGURES_DIR),
-        model_order=model_order, dataset_order=dataset_order
-    )
-    print("F12-S1: 4-metric gain heatmap S1 …")
-    f12_gain_4metric.generate_s1(
-        df_singles_best, df_ens_best_rq2, _out_dir(cfg.FIGURES_DIR),
-        model_order=model_order, dataset_order=dataset_order
-    )
-
-    print("F13: SA lift heatmap …")
-    f13_sa_lift_heatmap.generate(
-        df_singles_best, df_ens_best_rq2, df_base, _out_dir(cfg.FIGURES_DIR),
-        model_order=model_order, dataset_order=dataset_order
-    )
-
-    print("F14: D forest single vs ensemble ...")
-    f14_d_forest_rq2.generate(
-        df_singles_best, df_ens_best_rq2, df_base, _out_dir(cfg.FIGURES_DIR),
-        model_order=model_order
-    )
-
-    print("F15: win rate heatmap …")
-    f15_winrate_heatmap.generate(wtl_median, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
-
-    print("F17: type x rule interaction heatmap …")
-    f17_type_rule_heatmap.generate(df_ens_rq33, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
-    print("F17-S1: type x rule interaction S1 only …")
-    f17_type_rule_heatmap.generate_s1(df_ens_rq33, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
-    print("F17-4metric: type x rule across all 4 metrics …")
-    f17_type_rule_heatmap.generate_4metric(df_ens_rq33, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
-
-    print("F18: optimal k histogram + marginal gain …")
-    f18_k_marginal.generate(df_ens_raw, _out_dir(cfg.FIGURES_DIR))
-
-    print("F21: rule by sample size tier …")
-    f21_rule_samplesize.generate(df_ens_rq33, df_base, _out_dir(cfg.FIGURES_DIR))
-    print("F21-per-base: rule by sample size tier per base type …")
-    f21_rule_samplesize.generate_per_base(df_ens_rq33, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
-
-    print("F22: NN vs MEAN scatter (aggregated) …")
-    f22_nn_scatter.generate(df_ens_rq33, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
-
-    print("F_RQ33_SLOPE: slope graph — SK rank per rule at best k (RQ3.3) …")
-    f_rq33_slope.generate(sk_rq33_fig, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
-    f_rq33_slope.generate_s1(sk_rq33_fig, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
-    print("F_RQ33_WINNER_MAP: winning rule per (base type, dataset) (RQ3.3) …")
-    f_rq33_winner_map.generate(df_ens_rq33, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
-    f_rq33_winner_map.generate_s1(df_ens_rq33, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
-    f_rq33_winner_map.generate_sk(sk_rq33_fig, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
-    f_rq33_winner_map.generate_sk_s1(sk_rq33_fig, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
-    print("F_RQ33_RULE_RANK_HEATMAP: mean SK rank per (base type, rule) heatmap (RQ3.3) …")
-    f_rq33_rule_rank_heatmap.generate(sk_rq33_fig, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
-    f_rq33_rule_rank_heatmap.generate_s1(sk_rq33_fig, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
-    print("F_RQ33_RULE_BAR: grouped bar chart SK rank per rule (RQ3.3) …")
-    f_rq33_rule_bar.generate(sk_rq33_fig, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
-    f_rq33_rule_bar.generate_s1(sk_rq33_fig, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
-    print("F_RQ33_RULE_MRE_HEATMAP: mean MRE heatmap per (base type, rule) (RQ3.3) …")
-    f_rq33_rule_mre_heatmap.generate(df_ens_rq33, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
-    f_rq33_rule_mre_heatmap.generate_s1(df_ens_rq33, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
-    print("F_RQ33_COMBINED_HEATMAP: MRE + SK rank combined heatmap (RQ3.3) …")
-    f_rq33_combined_heatmap.generate(sk_rq33_fig, df_ens_rq33, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
-    f_rq33_combined_heatmap.generate_s1(sk_rq33_fig, df_ens_rq33, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
-
-    print("F_LIFT_SCATTER: SK rank lift single→ensemble …")
-    f_lift_scatter.generate(sk_mixed, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
-
-    print("F_GAP_CLOSE: SK rank gap heatmap …")
-    f_gap_close.generate(
-        sk_mixed, _out_dir(cfg.FIGURES_DIR),
-        model_order=model_order, dataset_order=dataset_order
-    )
-    print("F_GAP_CLOSE2: single-dataset zoom …")
-    f_gap_close2.generate(sk_mixed, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
-
-    print("F_BORDA_MIXED: Borda score singles vs ensembles …")
-    f_borda_mixed.generate(sk_mixed, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
-
-    print("F_K_HEATMAP: best k per base type × rule …")
-    f_k_heatmap.generate(df_ens_raw, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
-    print("F_K_HEATMAP-S1: best k S1 only …")
-    f_k_heatmap.generate_s1(df_ens_raw, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
-
-    print("F_K_BOX: MRE distribution per k …")
-    f_k_box.generate(df_ens_raw, _out_dir(cfg.FIGURES_DIR))
-
-    print("F_K_ELBOW: MRE vs k per base type (median, all scenarios) …")
-    f_k_elbow.generate(df_ens_raw, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
-    print("F_K_ELBOW mean (all scenarios) …")
-    f_k_elbow.generate_mean(df_ens_raw, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
-    print("F_K_ELBOW mean S1 (per-dataset min sample size) …")
-    f_k_elbow.generate_s1_mean(df_ens_raw, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
-    print("F_K_ELBOW mean by-rule (3 panels × 8 base-type lines) …")
-    f_k_elbow.generate_mean_byrule(df_ens_raw, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
-    print("F_K_ELBOW mean by-rule S1 …")
-    f_k_elbow.generate_s1_mean_byrule(df_ens_raw, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
-    print("F_K_ELBOW_DATASET: MRE vs k per dataset (by rule) …")
-    f_k_elbow_dataset.generate(
-        df_ens_raw, _out_dir(cfg.FIGURES_DIR), dataset_order=dataset_order
-    )
-    print("F_K_ELBOW_DATASET by base type (all datasets) …")
-    f_k_elbow_dataset.generate_by_base(
-        df_ens_raw, _out_dir(cfg.FIGURES_DIR),
-        dataset_order=dataset_order, model_order=model_order
-    )
-    print("F_K_ELBOW_DATASET by base type (S1 only) …")
-    f_k_elbow_dataset.generate_by_base_s1(
-        df_ens_raw, _out_dir(cfg.FIGURES_DIR),
-        dataset_order=dataset_order, model_order=model_order
-    )
-    print("F_K_SK_RANK_CURVE + F_K_RANK1_HEATMAP — global (216) and per-rule (72) …")
-    k_sk_ranks    = _load("k_sk_ranks")
-    k_sk_ranks_pr = _load("k_sk_ranks_perrule")
-    for data, sfx in [(k_sk_ranks, "_global"), (k_sk_ranks_pr, "_perrule")]:
-        f_k_sk_rank_curve.generate(data, _out_dir(cfg.FIGURES_DIR), model_order=model_order, suffix=sfx)
-        f_k_sk_rank_curve.generate_s1(data, _out_dir(cfg.FIGURES_DIR), model_order=model_order, suffix=sfx)
-        f_k_sk_rank_curve.generate_byrule(data, _out_dir(cfg.FIGURES_DIR), model_order=model_order, suffix=sfx)
-        f_k_sk_rank_curve.generate_s1_byrule(data, _out_dir(cfg.FIGURES_DIR), model_order=model_order, suffix=sfx)
-        f_k_rank1_heatmap.generate(data, _out_dir(cfg.FIGURES_DIR), model_order=model_order, suffix=sfx)
-        f_k_rank1_heatmap.generate_s1(data, _out_dir(cfg.FIGURES_DIR), model_order=model_order, suffix=sfx)
-        f_k_pct_rank1_curve.generate(data, _out_dir(cfg.FIGURES_DIR), model_order=model_order, suffix=sfx)
-        f_k_pct_rank1_curve.generate_s1(data, _out_dir(cfg.FIGURES_DIR), model_order=model_order, suffix=sfx)
-
-    print("F_K_VS_BASELINE_COMPARE: global vs per-rule comparison heatmap …")
-    f_k_vs_baseline_compare.generate(k_sk_ranks, k_sk_ranks_pr, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
-    f_k_vs_baseline_compare.generate_s1(k_sk_ranks, k_sk_ranks_pr, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
-
-    print("F_K_ELBOW_DATASET by base type (aggregate, all scenarios) …")
-    f_k_elbow_dataset.generate_by_base_agg(
-        df_ens_raw, _out_dir(cfg.FIGURES_DIR), model_order=model_order
-    )
-    print("F_K_ELBOW_DATASET by base type (aggregate, S1 per dataset) …")
-    f_k_elbow_dataset.generate_by_base_agg_s1(
-        df_ens_raw, _out_dir(cfg.FIGURES_DIR), model_order=model_order
-    )
-
-    print("F_RULE_VIOLIN: MRE distribution per rule …")
-    f_rule_violin.generate(df_ens_rq33, _out_dir(cfg.FIGURES_DIR))
-
-    print("F_RULE_METRIC_HEATMAP: rule x metric …")
-    f_rule_metric_heatmap.generate(df_ens_rq33, _out_dir(cfg.FIGURES_DIR))
-    print("F_RULE_METRIC_HEATMAP per base type …")
-    f_rule_metric_heatmap.generate_per_base(df_ens_rq33, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
-    print("F_RULE_METRIC_HEATMAP S1 only …")
-    f_rule_metric_heatmap.generate_s1(df_ens_rq33, _out_dir(cfg.FIGURES_DIR), model_order=model_order)
-
-    print("F_RANK_STABILITY: per-model rank stability across datasets …")
-    f_rank_stability.generate(
-        borda_ds_singles, _out_dir(cfg.FIGURES_DIR), model_order=model_order
-    )
-
-    print("F_MRE_ABS_HEATMAP: absolute MRE heatmap models x datasets …")
+    print("F_MRE_ABS_HEATMAP (mean, all + S1) …")
     f_mre_abs_heatmap.generate(
         df_singles_best, _out_dir(cfg.FIGURES_DIR),
         sk_singles=sk_singles,
         model_order=model_order, dataset_order=dataset_order
     )
 
-    print("F_DATASET_CHAMPION: per-dataset model dominance …")
-    f_dataset_champion.generate(
-        df_singles_best, _out_dir(cfg.FIGURES_DIR),
+    # ── FINAL: RQ2 ──────────────────────────────────────────────────────────
+    print("F14: Δ forest single vs ensemble …")
+    f14_d_forest_rq2.generate(
+        df_singles_best, df_ens_best_rq2, df_base, _out_dir(cfg.FIGURES_DIR),
+        model_order=model_order
+    )
+
+    print("F_GAP_CLOSE: SK rank gap heatmap …")
+    f_gap_close.generate(
+        sk_mixed, _out_dir(cfg.FIGURES_DIR),
         model_order=model_order, dataset_order=dataset_order
     )
 
-    print("F_METRIC_DISAGREE_DATASET: per-dataset metric disagreement …")
-    f_metric_disagree_dataset.generate(
-        df_singles_best, _out_dir(cfg.FIGURES_DIR), dataset_order=dataset_order
+    # ── FINAL: RQ3.2 ────────────────────────────────────────────────────────
+    print("F_K_SK_RANK_CURVE (perrule, byrule): mean SK rank vs k per rule …")
+    k_sk_ranks_pr = _load("k_sk_ranks_perrule")
+    f_k_sk_rank_curve.generate_byrule(
+        k_sk_ranks_pr, _out_dir(cfg.FIGURES_DIR), model_order=model_order, suffix="_perrule"
     )
 
-    print("F_PROFILE_LINES: model MRE profiles across datasets …")
-    f_profile_lines.generate(
-        df_singles_best, _out_dir(cfg.FIGURES_DIR), model_order=model_order
+    # ── FINAL: RQ3.3 ────────────────────────────────────────────────────────
+    print("F_RQ33_COMBINED_HEATMAP (all + S1) …")
+    f_rq33_combined_heatmap.generate(
+        sk_rq33_fig, df_ens_rq33, _out_dir(cfg.FIGURES_DIR), model_order=model_order
+    )
+    f_rq33_combined_heatmap.generate_s1(
+        sk_rq33_fig, df_ens_rq33, _out_dir(cfg.FIGURES_DIR), model_order=model_order
     )
 
-    print("F_MODEL_DATASET_RANK: HINNPerf vs DeepPerf dataset x tier rank …")
-    f_model_dataset_rank.generate(
-        df_singles_best, _out_dir(cfg.FIGURES_DIR),
-        model_order=model_order, dataset_order=dataset_order
-    )
-
-    print("F_RANK_FLIP_HEATMAP: metric rank-flip rate per dataset …")
-    f_rank_flip_heatmap.generate(
-        df_singles_best, _out_dir(cfg.FIGURES_DIR), dataset_order=dataset_order
-    )
-
-    print("F_4METRIC_HEATMAP: 2x2 heatmap one panel per metric …")
-    f_4metric_heatmap.generate(
-        df_singles_best, _out_dir(cfg.FIGURES_DIR),
-        model_order=model_order, dataset_order=dataset_order
-    )
-
-    print("F_DATASET_RANK_PROFILES: per-dataset models x metrics rank heatmap …")
-    f_dataset_rank_profiles.generate(
-        df_singles_best, _out_dir(cfg.FIGURES_DIR),
-        model_order=model_order, dataset_order=dataset_order
-    )
-
-    print("F_BUMP_CHART: rank bump chart across metrics per dataset …")
-    f_bump_chart.generate(
-        df_singles_best, _out_dir(cfg.FIGURES_DIR),
-        model_order=model_order, dataset_order=dataset_order
-    )
-
-    print("F_METRIC_CONSISTENCY: metric-consistency heatmap …")
-    f_metric_consistency.generate(
-        df_singles_best, _out_dir(cfg.FIGURES_DIR),
-        model_order=model_order, dataset_order=dataset_order
-    )
+    # ── NOT IN FINAL PAPER (commented out) ──────────────────────────────────
+    # f2_ensemble_gain.generate / generate_s1
+    # f4_wtl_bars.generate_f4a
+    # f6_mibre_mre_scatter.generate
+    # f7_forest_plot.generate
+    # f8_cd_diagram.generate
+    # f10_samplesize_trend.generate
+    # f12_gain_4metric.generate / generate_s1
+    # f13_sa_lift_heatmap.generate
+    # f15_winrate_heatmap.generate
+    # f17_type_rule_heatmap.generate / generate_s1 / generate_4metric
+    # f18_k_marginal.generate
+    # f21_rule_samplesize.generate / generate_per_base
+    # f22_nn_scatter.generate
+    # f_rq33_slope.generate / generate_s1
+    # f_rq33_winner_map.generate / generate_s1 / generate_sk / generate_sk_s1
+    # f_rq33_rule_rank_heatmap.generate / generate_s1
+    # f_rq33_rule_bar.generate / generate_s1
+    # f_rq33_rule_mre_heatmap.generate / generate_s1
+    # f_lift_scatter.generate
+    # f_gap_close2.generate
+    # f_borda_mixed.generate
+    # f_k_heatmap.generate / generate_s1
+    # f_k_box.generate
+    # f_k_elbow.generate / generate_mean / generate_s1_mean / generate_mean_byrule / generate_s1_mean_byrule
+    # f_k_elbow_dataset.generate / generate_by_base / generate_by_base_s1 / generate_by_base_agg / generate_by_base_agg_s1
+    # f_k_sk_rank_curve.generate / generate_s1 / generate_s1_byrule  (global and other perrule variants)
+    # f_k_rank1_heatmap.generate / generate_s1
+    # f_k_pct_rank1_curve.generate / generate_s1
+    # f_k_vs_baseline_compare.generate / generate_s1
+    # f_rule_violin.generate
+    # f_rule_metric_heatmap.generate / generate_per_base / generate_s1
+    # f_rank_stability.generate
+    # f_dataset_champion.generate
+    # f_metric_disagree_dataset.generate
+    # f_profile_lines.generate
+    # f_model_dataset_rank.generate
+    # f_rank_flip_heatmap.generate
+    # f_4metric_heatmap.generate
+    # f_dataset_rank_profiles.generate
+    # f_bump_chart.generate
+    # f_metric_consistency.generate
 
     print("All figures done.")
 

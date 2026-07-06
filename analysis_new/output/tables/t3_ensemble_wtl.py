@@ -66,18 +66,14 @@ def _one_variant(df, models, agg_label, out_dir):
 
 
 def _one_variant_winrate(df, models, agg_label, out_dir):
-    """Alternative format: win-rate [CI] + imp% (TOSEM style)."""
-    metric_headers = " & ".join(
-        rf"\multicolumn{{2}}{{c}}{{{m}}}" for m in METRICS_DISPLAY
-    )
-    sub_header = " & ".join([r"win\% [95\%CI] & imp\%"] * len(METRICS_DISPLAY))
-    col_spec   = "l" + "cc" * len(METRICS_DISPLAY)
+    """Compact format: win% [CI] (imp%) — one column per metric."""
+    col_spec = "l" + "c" * len(METRICS_DISPLAY)
+    metric_headers = " & ".join(METRICS_DISPLAY)
 
     lines = [
         r"\begin{tabular}{" + col_spec + "}",
         r"\toprule",
         "Model & " + metric_headers + r" \\",
-        "& " + sub_header + r" \\",
         r"\midrule",
     ]
     for model in models:
@@ -85,15 +81,16 @@ def _one_variant_winrate(df, models, agg_label, out_dir):
         for metric in METRICS_DISPLAY:
             row = df[(df["base_type"] == model) & (df["metric"] == metric)]
             if row.empty:
-                cells.extend(["--", "--"])
+                cells.append("--")
                 continue
             r = row.iloc[0]
-            wr   = float(r["win_rate"]) * 100
-            lo   = float(r["win_rate_lo"]) * 100
-            hi   = float(r["win_rate_hi"]) * 100
-            imp  = float(r["imp_pct_mean"])
-            cells.append(f"{wr:.0f}\\% [{lo:.0f}--{hi:.0f}\\%]")
-            cells.append(f"{imp:+.1f}\\%")
+            wr  = float(r["win_rate"]) * 100
+            lo  = float(r["win_rate_lo"]) * 100
+            hi  = float(r["win_rate_hi"]) * 100
+            imp = float(r["imp_pct_mean"])
+            cells.append(
+                f"{wr:.0f}\\% [{lo:.0f}--{hi:.0f}\\%] ({imp:+.1f}\\%)"
+            )
         lines.append(" & ".join(cells) + r" \\")
     lines += [r"\bottomrule", r"\end{tabular}"]
     fname = f"t3_winrate_{agg_label}.tex"

@@ -55,42 +55,43 @@ def _build_mats(sk_rq33, df_ens, base_types):
     return mre_mat, sk_mat
 
 
-def _draw(mre_mat, sk_mat, base_types, out_dir, fname, title):
-    vmin     = np.nanmin(sk_mat)
-    vmax     = np.nanmax(sk_mat)
-    midpoint = (vmin + vmax) / 2
+def _draw(mre_mat, sk_mat, base_types, out_dir, fname, title=None):
+    # Transpose: base_types on x-axis, RULES on y-axis → wider, shorter figure
+    sk_T  = sk_mat.T    # shape (n_rules, n_base_types)
+    mre_T = mre_mat.T
 
-    fig, ax = plt.subplots(figsize=(4.5, len(base_types) * 0.78 + 1.3))
+    vmin = np.nanmin(sk_T)
+    vmax = np.nanmax(sk_T)
 
-    im = ax.imshow(sk_mat, cmap="RdYlGn_r", vmin=vmin, vmax=vmax, aspect="auto")
+    n_bt    = len(base_types)
+    n_rules = len(RULES)
+    fig, ax = plt.subplots(figsize=(max(6.0, n_bt * 0.85), max(2.2, n_rules * 0.80 + 1.0)))
 
-    ax.set_xticks(range(len(RULES)))
-    ax.set_xticklabels(RULES, fontsize=10, fontweight="bold")
-    ax.set_yticks(range(len(base_types)))
-    ax.set_yticklabels(base_types, fontsize=9)
+    im = ax.imshow(sk_T, cmap="RdYlGn_r", vmin=vmin, vmax=vmax, aspect="auto")
 
-    for i in range(len(base_types)):
-        for j in range(len(RULES)):
-            sk_v  = sk_mat[i, j]
-            mre_v = mre_mat[i, j]
+    ax.set_xticks(range(n_bt))
+    ax.set_xticklabels(base_types, fontsize=9, fontweight="bold")
+    ax.set_yticks(range(n_rules))
+    ax.set_yticklabels(RULES, fontsize=10, fontweight="bold")
+
+    for j, rule in enumerate(RULES):
+        for i, bt in enumerate(base_types):
+            sk_v  = sk_T[j, i]
+            mre_v = mre_T[j, i]
             if np.isnan(sk_v):
                 continue
-            txt_color = "white" if sk_v > midpoint else "black"
             mre_str = f"{mre_v:.2f}" if not np.isnan(mre_v) else "?"
-            # MRE on top half of cell
-            ax.text(j, i - 0.17, mre_str,
+            ax.text(i, j - 0.17, mre_str,
                     ha="center", va="center", fontsize=8.0,
-                    color=txt_color, fontweight="bold")
-            # SK rank on bottom half, smaller and italic
-            ax.text(j, i + 0.17, f"({sk_v:.2f})",
+                    color="black", fontweight="bold")
+            ax.text(i, j + 0.17, f"({sk_v:.2f})",
                     ha="center", va="center", fontsize=7.0,
-                    color=txt_color, style="italic")
+                    color="black")
 
-    cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
-    cbar.set_label("Mean SK rank (lower = better)", fontsize=8)
+    cbar = fig.colorbar(im, ax=ax, fraction=0.03, pad=0.04)
+    cbar.set_label("Mean SK rank", fontsize=8)
 
-    ax.set_title(title, fontsize=8.5)
-    fig.tight_layout()
+    fig.tight_layout(pad=0.4)
     save_figure(fig, os.path.join(out_dir, fname))
 
 

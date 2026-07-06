@@ -33,7 +33,8 @@ def generate(df_singles_best, df_ens_best_rq31,
     out_dir = os.path.join(latex_dir, "t4")
     models  = model_order or sorted(df_singles_best["model_type"].unique())
 
-    _lift_table(borda_global_singles, borda_global_ens, models, out_dir)
+    # FINAL SET: only T4b mean (t4b_ens_rank_mean.tex)
+    # _lift_table(borda_global_singles, borda_global_ens, models, out_dir)  # not in final paper
     _ens_rank_table(df_ens_best_rq31, sk_ens, borda_global_ens, models, out_dir,
                     df_baseline=df_baseline, sk_mixed=sk_mixed)
 
@@ -94,7 +95,9 @@ def _ens_rank_table(df_ens, sk_ens, borda_global_ens, models, out_dir,
     has_sa    = df_aug is not None
     has_borda = bool(mixed_borda)
 
-    for agg in ("mean", "median"):
+    # FINAL SET: only mean variant (not median)
+    # for agg in ("mean", "median"):
+    for agg in ("mean",):
         rows = []
         for model in models:
             row = {"Model": model}

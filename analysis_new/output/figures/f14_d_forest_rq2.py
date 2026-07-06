@@ -54,29 +54,30 @@ def generate(df_singles_best, df_ens_best_rq2, df_baseline, figures_dir, model_o
     res = pd.DataFrame(rows).sort_values("D_single").reset_index(drop=True)
 
     fig, ax = plt.subplots(figsize=(6.5, 4.2))
-    y = np.arange(len(res))
+
+    OFF = 0.15  # vertical offset so single/ensemble error bars don't overlap
 
     for i, row in res.iterrows():
         color = MODEL_COLORS.get(row["model"], "#333")
+        ys = i + OFF   # single above
+        ye = i - OFF   # ensemble below
         if not (np.isnan(row["D_single"]) or np.isnan(row["D_ens"])):
-            ax.plot([row["D_single"], row["D_ens"]], [i, i],
+            ax.plot([row["D_single"], row["D_ens"]], [ys, ye],
                     color=color, linewidth=1.1, alpha=0.65, zorder=1)
         if not np.isnan(row["D_single"]):
-            ax.errorbar(row["D_single"], i, xerr=row["D_single_sd"],
+            ax.errorbar(row["D_single"], ys, xerr=row["D_single_sd"],
                         fmt="none", color=color, capsize=2, linewidth=0.7, alpha=0.5, zorder=2)
-            ax.scatter(row["D_single"], i, marker="o", s=48,
+            ax.scatter(row["D_single"], ys, marker="o", s=48,
                        facecolors="none", edgecolors=color, linewidth=1.5, zorder=3)
         if not np.isnan(row["D_ens"]):
-            ax.errorbar(row["D_ens"], i, xerr=row["D_ens_sd"],
+            ax.errorbar(row["D_ens"], ye, xerr=row["D_ens_sd"],
                         fmt="none", color=color, capsize=2, linewidth=0.7, alpha=0.5, zorder=2)
-            ax.scatter(row["D_ens"], i, marker="o", s=48, color=color, zorder=3)
+            ax.scatter(row["D_ens"], ye, marker="o", s=48, color=color, zorder=3)
 
     ax.axvline(0, color="red", linewidth=1.0, linestyle="-")
 
     ax.set_yticks(range(len(res)))
     ax.set_yticklabels(res["model"].tolist())
-    ax.set_xlabel("Mean Δ effect size (± SD across scenarios)\nMore negative = better than random")
-    ax.set_title("Δ forest: single (open) vs. best ensemble (filled)")
 
     legend_elements = [
         Line2D([0], [0], marker="o", color="gray", markerfacecolor="none",

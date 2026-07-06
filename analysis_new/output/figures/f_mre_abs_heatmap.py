@@ -14,7 +14,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-from .plot_utils import save_figure
+from .plot_utils import save_figure, ds_label
 
 
 def _sk_pivot(sk_singles, sample_sizes=None):
@@ -38,38 +38,37 @@ def _draw(pivot_mre, models, ds_order, agg_label, scope_label,
               if sk_piv is not None else None
     vmax = float(np.nanpercentile(mat[~np.isnan(mat)], 95)) if not np.all(np.isnan(mat)) else 1.0
 
-    fig, ax = plt.subplots(figsize=(8, 3.5))
+    n_ds  = len(ds_order)
+    n_mod = len(models)
+    fig, ax = plt.subplots(figsize=(max(7.0, n_ds * 0.85), max(2.6, n_mod * 0.42)))
     im = ax.imshow(mat, cmap="YlOrRd", aspect="auto", vmin=0, vmax=vmax)
 
-    ax.set_xticks(range(len(ds_order)))
-    ax.set_xticklabels(ds_order, rotation=38, ha="right", fontsize=7)
-    ax.set_yticks(range(len(models)))
-    ax.set_yticklabels(models, fontsize=8)
-    ax.set_xlabel("Dataset (easy → hard)")
-    ax.set_title(f"{agg_label} MRE per model × dataset — {scope_label}")
+    ax.set_xticks(range(n_ds))
+    ax.set_xticklabels([ds_label(d) for d in ds_order], rotation=38, ha="right", fontsize=9)
+    ax.set_yticks(range(n_mod))
+    ax.set_yticklabels(models, fontsize=9)
 
-    for i in range(len(models)):
-        for j in range(len(ds_order)):
+    for i in range(n_mod):
+        for j in range(n_ds):
             v = mat[i, j]
             if np.isnan(v):
                 continue
             text_color = "white" if v > vmax * 0.65 else "black"
 
             if mat_sk is not None and not np.isnan(mat_sk[i, j]):
-                # MRE value on top, SK rank subscript below
                 ax.text(j, i - 0.18, f"{v:.2f}",
-                        ha="center", va="center", fontsize=5.5, color=text_color,
+                        ha="center", va="center", fontsize=8, color=text_color,
                         fontweight="bold")
-                ax.text(j, i + 0.25, f"sk {mat_sk[i, j]:.1f}",
-                        ha="center", va="center", fontsize=4.5,
+                ax.text(j, i + 0.22, f"sk {mat_sk[i, j]:.1f}",
+                        ha="center", va="center", fontsize=6.5,
                         color=text_color, alpha=0.85)
             else:
                 ax.text(j, i, f"{v:.2f}", ha="center", va="center",
-                        fontsize=5.5, color=text_color)
+                        fontsize=8, color=text_color)
 
     cbar = fig.colorbar(im, ax=ax, fraction=0.03)
-    cbar.set_label(f"{agg_label} MRE")
-    fig.tight_layout()
+    cbar.set_label(f"{agg_label} MRE", fontsize=9)
+    fig.tight_layout(pad=0.4)
     save_figure(fig, os.path.join(out_dir, fname))
 
 
@@ -93,7 +92,9 @@ def generate(df_singles_best, figures_dir, sk_singles=None,
     sk_s1  = _sk_pivot(sk_singles, sample_sizes=s1_sizes) \
              if sk_singles is not None and s1_sizes is not None else None
 
-    for agg_label, agg_fn in [("Median", "median"), ("Mean", "mean")]:
+    # FINAL SET: only mean variants (not median)
+    # for agg_label, agg_fn in [("Median", "median"), ("Mean", "mean")]:
+    for agg_label, agg_fn in [("Mean", "mean")]:
         # all scenarios
         pivot_all = getattr(
             sub.groupby(["model_type", "dataset"])["value"], agg_fn

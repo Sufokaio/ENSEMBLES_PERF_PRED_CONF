@@ -117,7 +117,6 @@ def _draw_byrule(mean_sk, base_types, ks, out_dir, fname, suptitle):
         ax        = axes[0][col]
         rule_data = mean_sk[mean_sk["rule"] == rule]
 
-        # Dashed line at best mean SK rank achieved by any base_type in this rule
         best_rank = rule_data["sk_rank"].min() if not rule_data.empty else 1.0
         ax.axhline(best_rank, color="#888888", linewidth=0.9,
                    linestyle="--", zorder=0, label="_nolegend_")
@@ -127,22 +126,24 @@ def _draw_byrule(mean_sk, base_types, ks, out_dir, fname, suptitle):
             ax.plot(bt_data["k"], bt_data["sk_rank"],
                     color=MODEL_COLORS.get(bt, "#333"),
                     marker=BASE_MARKERS.get(bt, "o"),
-                    markersize=4, linewidth=1.4, label=bt)
+                    markersize=5, linewidth=1.5, label=bt)
 
-        ax.set_title(rule, fontsize=10, fontweight="bold")
-        ax.set_xlabel("$k$")
+        ax.set_title(rule, fontsize=11, fontweight="bold")
+        ax.set_xlabel("$k$", fontsize=10)
         if col == 0:
-            ax.set_ylabel("Mean SK rank (within rule)")
+            ax.set_ylabel("Mean SK rank", fontsize=10)
         ax.set_xticks(ks)
-        ax.set_xticklabels([str(k) for k in ks], fontsize=7)
+        ax.set_xticklabels([str(k) for k in ks], fontsize=9)
+        ax.tick_params(axis="y", labelsize=9)
         ax.invert_yaxis()
         ax.grid(True, alpha=0.2)
 
     handles, labels = axes[0][0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc="lower right", fontsize=8,
-               title="Base type", ncol=2)
-    fig.suptitle(suptitle, fontsize=9)
+    fig.legend(handles, labels, loc="lower center",
+               bbox_to_anchor=(0.5, -0.02), fontsize=9,
+               title="Base type", ncol=4)
     fig.tight_layout()
+    fig.subplots_adjust(bottom=0.22)
     save_figure(fig, os.path.join(out_dir, fname))
 
 

@@ -30,10 +30,14 @@ def generate(df_singles_best, sk_df, borda_per_metric, borda_global,
     out_dir = os.path.join(latex_dir, "t1")
     models  = model_order or sorted(df_singles_best["model_type"].unique())
 
-    for scope in ("all", "s1"):
-        for agg in ("mean", "median"):
-            _one_variant(df_singles_best, sk_df, borda_global,
-                         models, scope, agg, out_dir)
+    # FINAL SET: only mean, all scenarios
+    _one_variant(df_singles_best, sk_df, borda_global,
+                 models, "all", "mean", out_dir)
+    # Commented-out variants (not in final paper):
+    # for scope in ("all", "s1"):
+    #     for agg in ("mean", "median"):
+    #         _one_variant(df_singles_best, sk_df, borda_global,
+    #                      models, scope, agg, out_dir)
 
 
 def _filter_scope(df, scope):

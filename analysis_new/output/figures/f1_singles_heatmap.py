@@ -13,7 +13,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 
-from .plot_utils import save_figure
+from .plot_utils import save_figure, ds_label
 
 
 def generate(borda_per_dataset, figures_dir, model_order=None, dataset_order=None):
@@ -32,35 +32,30 @@ def generate(borda_per_dataset, figures_dir, model_order=None, dataset_order=Non
         .reindex(index=datasets, columns=models)
     )
 
-    fig, ax = plt.subplots(figsize=(6.5, 3.2))
-
-    # 8 possible rank levels: light (1=best) → dark (8=worst)
     n_ranks = len(models)
+    n_ds    = len(datasets)
+    fig, ax = plt.subplots(figsize=(max(5.5, n_ranks * 0.75), max(2.4, n_ds * 0.38)))
+
     cmap = matplotlib.cm.get_cmap("YlOrRd", n_ranks)
+    mat  = pivot.values.astype(float)
+    im   = ax.imshow(mat, cmap=cmap, vmin=0.5, vmax=n_ranks + 0.5, aspect="auto")
 
-    mat = pivot.values.astype(float)
-    im  = ax.imshow(mat, cmap=cmap, vmin=0.5, vmax=n_ranks + 0.5, aspect="auto")
+    ax.set_xticks(range(n_ranks))
+    ax.set_xticklabels(models, rotation=45, ha="right", fontsize=9)
+    ax.set_yticks(range(n_ds))
+    ax.set_yticklabels([ds_label(d) for d in datasets], fontsize=9)
 
-    ax.set_xticks(range(len(models)))
-    ax.set_xticklabels(models, rotation=45, ha="right")
-    ax.set_yticks(range(len(datasets)))
-    ax.set_yticklabels(datasets)
-    ax.set_xlabel("Model type")
-    ax.set_ylabel("Dataset")
-    ax.set_title("Borda rank per dataset (1 = best)")
-
-    # Annotate cells with rank value
-    for i in range(len(datasets)):
-        for j in range(len(models)):
+    for i in range(n_ds):
+        for j in range(n_ranks):
             val = mat[i, j]
             if not np.isnan(val):
                 ax.text(j, i, str(int(val)), ha="center", va="center",
-                        fontsize=7, color="black")
+                        fontsize=8, color="black")
 
     cbar = fig.colorbar(im, ax=ax, fraction=0.03, pad=0.04)
-    cbar.set_label("Borda rank")
+    cbar.set_label("Borda rank", fontsize=9)
     cbar.set_ticks(range(1, n_ranks + 1))
-
+    fig.tight_layout(pad=0.4)
     save_figure(fig, os.path.join(out_dir, "f1_rank_heatmap.pdf"))
 
 
@@ -85,29 +80,28 @@ def generate_s1(sk_singles, figures_dir, model_order=None, dataset_order=None):
         .reindex(index=datasets, columns=models)
     )
 
-    fig, ax = plt.subplots(figsize=(6.5, 3.2))
     n_ranks = len(models)
+    n_ds    = len(datasets)
+    fig, ax = plt.subplots(figsize=(max(5.5, n_ranks * 0.75), max(2.4, n_ds * 0.38)))
+
     cmap = matplotlib.cm.get_cmap("YlOrRd", n_ranks)
     mat  = pivot.values.astype(float)
     im   = ax.imshow(mat, cmap=cmap, vmin=0.5, vmax=n_ranks + 0.5, aspect="auto")
 
-    ax.set_xticks(range(len(models)))
-    ax.set_xticklabels(models, rotation=45, ha="right")
-    ax.set_yticks(range(len(datasets)))
-    ax.set_yticklabels(datasets)
-    ax.set_xlabel("Model type")
-    ax.set_ylabel("Dataset")
-    ax.set_title("Borda rank per dataset — S1 only (1 = best)")
+    ax.set_xticks(range(n_ranks))
+    ax.set_xticklabels(models, rotation=45, ha="right", fontsize=9)
+    ax.set_yticks(range(n_ds))
+    ax.set_yticklabels([ds_label(d) for d in datasets], fontsize=9)
 
-    for i in range(len(datasets)):
-        for j in range(len(models)):
+    for i in range(n_ds):
+        for j in range(n_ranks):
             val = mat[i, j]
             if not np.isnan(val):
                 ax.text(j, i, str(int(val)), ha="center", va="center",
-                        fontsize=7, color="black")
+                        fontsize=8, color="black")
 
     cbar = fig.colorbar(im, ax=ax, fraction=0.03, pad=0.04)
-    cbar.set_label("Borda rank")
+    cbar.set_label("Borda rank", fontsize=9)
     cbar.set_ticks(range(1, n_ranks + 1))
-
+    fig.tight_layout(pad=0.4)
     save_figure(fig, os.path.join(out_dir, "f1_rank_heatmap_s1.pdf"))
