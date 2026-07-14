@@ -8,9 +8,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 
-# Publication style
+# Publication style (sans-serif, matching conf-repo aesthetic)
 plt.rcParams.update({
-    "font.family":      "serif",
     "font.size":        9,
     "axes.labelsize":   9,
     "axes.titlesize":   9,

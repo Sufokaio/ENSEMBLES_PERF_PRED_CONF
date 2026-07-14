@@ -53,18 +53,15 @@ def _draw(pivot_mre, models, ds_order, agg_label, scope_label,
             v = mat[i, j]
             if np.isnan(v):
                 continue
-            text_color = "white" if v > vmax * 0.65 else "black"
-
             if mat_sk is not None and not np.isnan(mat_sk[i, j]):
                 ax.text(j, i - 0.18, f"{v:.2f}",
-                        ha="center", va="center", fontsize=8, color=text_color,
-                        fontweight="bold")
-                ax.text(j, i + 0.22, f"sk {mat_sk[i, j]:.1f}",
+                        ha="center", va="center", fontsize=8, color="black")
+                ax.text(j, i + 0.22, f"({mat_sk[i, j]:.1f})",
                         ha="center", va="center", fontsize=6.5,
-                        color=text_color, alpha=0.85)
+                        color="black", alpha=0.85)
             else:
                 ax.text(j, i, f"{v:.2f}", ha="center", va="center",
-                        fontsize=8, color=text_color)
+                        fontsize=8, color="black")
 
     cbar = fig.colorbar(im, ax=ax, fraction=0.03)
     cbar.set_label(f"{agg_label} MRE", fontsize=9)

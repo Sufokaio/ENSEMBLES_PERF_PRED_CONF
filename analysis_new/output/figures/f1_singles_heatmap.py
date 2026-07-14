@@ -34,14 +34,14 @@ def generate(borda_per_dataset, figures_dir, model_order=None, dataset_order=Non
 
     n_ranks = len(models)
     n_ds    = len(datasets)
-    fig, ax = plt.subplots(figsize=(max(5.5, n_ranks * 0.75), max(2.4, n_ds * 0.38)))
+    fig, ax = plt.subplots(figsize=(max(5.5, n_ranks * 0.75), max(2.6, n_ds * 0.42)))
 
     cmap = matplotlib.cm.get_cmap("YlOrRd", n_ranks)
     mat  = pivot.values.astype(float)
     im   = ax.imshow(mat, cmap=cmap, vmin=0.5, vmax=n_ranks + 0.5, aspect="auto")
 
     ax.set_xticks(range(n_ranks))
-    ax.set_xticklabels(models, rotation=45, ha="right", fontsize=9)
+    ax.set_xticklabels(models, rotation=38, ha="right", fontsize=9)
     ax.set_yticks(range(n_ds))
     ax.set_yticklabels([ds_label(d) for d in datasets], fontsize=9)
 
@@ -82,14 +82,14 @@ def generate_s1(sk_singles, figures_dir, model_order=None, dataset_order=None):
 
     n_ranks = len(models)
     n_ds    = len(datasets)
-    fig, ax = plt.subplots(figsize=(max(5.5, n_ranks * 0.75), max(2.4, n_ds * 0.38)))
+    fig, ax = plt.subplots(figsize=(max(5.5, n_ranks * 0.75), max(2.6, n_ds * 0.42)))
 
     cmap = matplotlib.cm.get_cmap("YlOrRd", n_ranks)
     mat  = pivot.values.astype(float)
     im   = ax.imshow(mat, cmap=cmap, vmin=0.5, vmax=n_ranks + 0.5, aspect="auto")
 
     ax.set_xticks(range(n_ranks))
-    ax.set_xticklabels(models, rotation=45, ha="right", fontsize=9)
+    ax.set_xticklabels(models, rotation=38, ha="right", fontsize=9)
     ax.set_yticks(range(n_ds))
     ax.set_yticklabels([ds_label(d) for d in datasets], fontsize=9)
 

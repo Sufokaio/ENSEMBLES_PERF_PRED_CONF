@@ -139,11 +139,12 @@ def _draw_byrule(mean_sk, base_types, ks, out_dir, fname, suptitle):
         ax.grid(True, alpha=0.2)
 
     handles, labels = axes[0][0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc="lower center",
-               bbox_to_anchor=(0.5, -0.02), fontsize=9,
-               title="Base type", ncol=4)
+    ax_nn = axes[0][2]
+    ax_nn.legend(handles, labels,
+                 loc="center left", bbox_to_anchor=(1.04, 0.5),
+                 fontsize=9, title="Base type", ncol=2,
+                 borderaxespad=0)
     fig.tight_layout()
-    fig.subplots_adjust(bottom=0.22)
     save_figure(fig, os.path.join(out_dir, fname))
 
 

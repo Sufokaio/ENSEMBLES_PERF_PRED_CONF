@@ -50,9 +50,9 @@ def generate(sk_mixed, figures_dir, model_order=None, dataset_order=None):
             v = mat[i, j]
             if not np.isnan(v):
                 ax.text(j, i, f"{v:+.1f}", ha="center", va="center",
-                        fontsize=8, color="black" if abs(v) < vmax * 0.6 else "white")
+                        fontsize=8, color="black")
 
     cbar = fig.colorbar(im, ax=ax, fraction=0.03, pad=0.04)
-    cbar.set_label("Δ SK rank (ens − single)", fontsize=9)
+    cbar.set_label("Δ SK rank", fontsize=9)
     fig.tight_layout(pad=0.4)
     save_figure(fig, os.path.join(out_dir, "f_gap_close_mre.pdf"))

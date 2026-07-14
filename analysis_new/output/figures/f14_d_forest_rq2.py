@@ -84,9 +84,11 @@ def generate(df_singles_best, df_ens_best_rq2, df_baseline, figures_dir, model_o
                markersize=7, linestyle="none", label="Single (best variant)"),
         Line2D([0], [0], marker="o", color="gray", markersize=7,
                linestyle="none", label="Best ensemble"),
-        Line2D([0], [0], color="red", linewidth=1.0, label="Δ = 0 (no better than random)"),
+        Line2D([0], [0], color="red", linewidth=1.0, label="Δ = 0"),
     ]
-    ax.legend(handles=legend_elements, fontsize=7, loc="lower right")
+    ax.legend(handles=legend_elements, fontsize=7, loc="lower right",
+              bbox_to_anchor=(1.0, 0.0), bbox_transform=ax.transAxes,
+              borderaxespad=0.15)
     ax.grid(True, axis="x", alpha=0.25, linewidth=0.5)
     fig.tight_layout()
     save_figure(fig, os.path.join(out_dir, "f14_d_forest_rq2.pdf"))

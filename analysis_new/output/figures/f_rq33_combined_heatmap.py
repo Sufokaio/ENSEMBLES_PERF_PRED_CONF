@@ -65,14 +65,14 @@ def _draw(mre_mat, sk_mat, base_types, out_dir, fname, title=None):
 
     n_bt    = len(base_types)
     n_rules = len(RULES)
-    fig, ax = plt.subplots(figsize=(max(6.0, n_bt * 0.85), max(2.2, n_rules * 0.80 + 1.0)))
+    fig, ax = plt.subplots(figsize=(max(5.5, n_bt * 0.75), max(1.6, n_rules * 0.52 + 0.6)))
 
     im = ax.imshow(sk_T, cmap="RdYlGn_r", vmin=vmin, vmax=vmax, aspect="auto")
 
     ax.set_xticks(range(n_bt))
-    ax.set_xticklabels(base_types, fontsize=9, fontweight="bold")
+    ax.set_xticklabels(base_types, fontsize=9)
     ax.set_yticks(range(n_rules))
-    ax.set_yticklabels(RULES, fontsize=10, fontweight="bold")
+    ax.set_yticklabels(RULES, fontsize=10)
 
     for j, rule in enumerate(RULES):
         for i, bt in enumerate(base_types):
@@ -83,7 +83,7 @@ def _draw(mre_mat, sk_mat, base_types, out_dir, fname, title=None):
             mre_str = f"{mre_v:.2f}" if not np.isnan(mre_v) else "?"
             ax.text(i, j - 0.17, mre_str,
                     ha="center", va="center", fontsize=8.0,
-                    color="black", fontweight="bold")
+                    color="black")
             ax.text(i, j + 0.17, f"({sk_v:.2f})",
                     ha="center", va="center", fontsize=7.0,
                     color="black")
