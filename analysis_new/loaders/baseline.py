@@ -1,21 +1,10 @@
-"""
-Load baseline metrics (random-guesser anchor).
+# Load baseline metrics (random-guesser anchor).
 
-File layout: {results_dir}/{dataset}/{sample_size}/baseline_metrics_results.json
-
-Each JSON: { "MAEp0": float, "Sp0": float, "Q5p0": float, "SA_5": float }
-"""
 import os
 import json
 import pandas as pd
 
-
 def load_baseline(results_dir):
-    """
-    Returns DataFrame:
-      dataset | sample_size | MAEp0 | Sp0 | Q5p0 | SA_5
-    One row per (dataset, sample_size).
-    """
     rows = []
     for ds_entry in _scan_dirs(results_dir):
         dataset = ds_entry.name
@@ -41,7 +30,6 @@ def load_baseline(results_dir):
     if not df.empty:
         df["sample_size"] = df["sample_size"].astype(int)
     return df
-
 
 def _scan_dirs(path):
     return [e for e in os.scandir(path) if e.is_dir()]

@@ -1,11 +1,5 @@
-"""
-F3: Number-of-Learners Trend (RQ3.2).
+# F3: Number-of-Learners Trend (RQ3.2).
 
-Line plot: x = k (2..10), y = aggregate metric value.
-3 panels (one per rule): MEAN | IRWM | NN.
-8 lines per panel (one per base model type).
-Primary metric: MRE.
-"""
 import os
 import numpy as np
 import pandas as pd
@@ -15,17 +9,8 @@ import matplotlib.pyplot as plt
 
 from .plot_utils import MODEL_COLORS, RULE_COLORS, save_figure
 
-
 def generate(df_ensembles_all, figures_dir,
              model_order=None, metric="MRE", agg="median"):
-    """
-    Parameters
-    ----------
-    df_ensembles_all : full ensemble DataFrame (all k, all rules, not best-variant filtered)
-                       [base_type, k, rule, dataset, sample_size, run, metric, value]
-    metric           : which metric to plot on y-axis (default MRE)
-    agg              : "median" or "mean"
-    """
     out_dir = os.path.join(figures_dir, "f3")
     models  = model_order or sorted(df_ensembles_all["base_type"].unique())
     rules   = ["MEAN", "IRWM", "NN"]
@@ -64,9 +49,7 @@ def generate(df_ensembles_all, figures_dir,
     fig.tight_layout()
     save_figure(fig, os.path.join(out_dir, f"f3_k_trend_{metric.lower()}_{agg}.pdf"))
 
-    # F3b: single-panel with 3 lines (aggregated across base types)
     _f3b_single_panel(sub, rules, k_vals, fn, metric, agg, out_dir)
-
 
 def _f3b_single_panel(sub, rules, k_vals, fn, metric, agg, out_dir):
     fig, ax = plt.subplots(figsize=(4.5, 3.0))

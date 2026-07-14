@@ -1,11 +1,5 @@
-"""
-F6: MIBRE vs. MRE Disagreement Scatter (C2).
+# F6: MIBRE vs. MRE Disagreement Scatter (C2).
 
-x-axis = MRE median rank per scenario per model.
-y-axis = MIBRE median rank per scenario per model.
-One point per (model_type, dataset, sample_size).
-Diagonal line = perfect agreement. Off-diagonal = protocol changes conclusions.
-"""
 import os
 import numpy as np
 import pandas as pd
@@ -15,17 +9,10 @@ import matplotlib.pyplot as plt
 
 from .plot_utils import MODEL_COLORS, save_figure
 
-
 def generate(df_singles_best, figures_dir, model_order=None):
-    """
-    Parameters
-    ----------
-    df_singles_best : best-variant singles long-format [model_type, dataset, sample_size, metric, value, run]
-    """
     out_dir = os.path.join(figures_dir, "f6")
     models  = model_order or sorted(df_singles_best["model_type"].unique())
 
-    # Compute median per (model_type, dataset, sample_size, metric)
     med = (
         df_singles_best[df_singles_best["metric"].isin(["MRE", "MIBRE"])]
         .groupby(["model_type", "dataset", "sample_size", "metric"])["value"]
@@ -36,7 +23,6 @@ def generate(df_singles_best, figures_dir, model_order=None):
         index=["model_type", "dataset", "sample_size"], columns="metric", values="value"
     ).reset_index()
 
-    # Rank models within each (dataset, sample_size) scenario
     records = []
     for (ds, ss), grp in pivot.groupby(["dataset", "sample_size"]):
         g = grp.copy()
@@ -53,7 +39,6 @@ def generate(df_singles_best, figures_dir, model_order=None):
                    color=MODEL_COLORS.get(model, "#333"),
                    label=model, s=18, alpha=0.7, edgecolors="none")
 
-    # Diagonal = perfect agreement
     max_rank = len(models)
     ax.plot([1, max_rank], [1, max_rank], color="gray", linewidth=1.0,
             linestyle="--", label="Perfect agreement")
@@ -67,7 +52,6 @@ def generate(df_singles_best, figures_dir, model_order=None):
     ax.set_aspect("equal")
     ax.grid(True, alpha=0.2, linewidth=0.5)
 
-    # Count off-diagonal points
     n_total = len(ranked)
     n_agree = int((ranked["mre_rank"] == ranked["mibre_rank"]).sum())
     ax.text(0.02, 0.97, f"{n_total - n_agree}/{n_total} points off-diagonal",

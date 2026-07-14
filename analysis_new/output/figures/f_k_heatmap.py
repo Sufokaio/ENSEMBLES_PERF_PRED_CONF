@@ -1,16 +1,5 @@
-"""
-F_K_HEATMAP: Best k per (base_type, rule) — 8x3 heatmap (RQ3.2).
+# F_K_HEATMAP: Best k per (base_type, rule) — 8x3 heatmap (RQ3.2).
 
-Three selection criteria, two scopes = 6 output files:
-  Criteria:
-    median_mre — k with lowest global median MRE across all runs+scenarios
-    mean_mre   — k with lowest global mean MRE across all runs+scenarios
-    mean_rank  — k with lowest mean Friedman rank across scenarios
-                 (per scenario, rank k values 1..N by median MRE; average those ranks)
-  Scopes:
-    all — all 40 (dataset x sample_size) scenarios
-    s1  — S1 scenarios only (8 scenarios, one per dataset)
-"""
 import os
 import numpy as np
 import pandas as pd
@@ -22,14 +11,11 @@ from .plot_utils import save_figure
 
 RULES = ["MEAN", "IRWM", "NN"]
 
-
 def _filter_s1(df):
     mins = df.groupby("dataset")["sample_size"].min().reset_index(name="_min")
     return df.merge(mins, on="dataset").query("sample_size == _min").drop(columns="_min")
 
-
 def _best_k_by_agg(sub, agg_fn):
-    """k with best (lowest) agg_fn value aggregated across all runs+scenarios."""
     agg = sub.groupby(["base_type", "rule", "k"])["value"].agg(agg_fn).reset_index()
     result = {}
     for (bt, rule), grp in agg.groupby(["base_type", "rule"]):
@@ -37,14 +23,7 @@ def _best_k_by_agg(sub, agg_fn):
             result[(bt, rule)] = int(grp.loc[grp["value"].idxmin(), "k"])
     return result
 
-
 def _best_k_by_sk_rank(sub):
-    """k with lowest mean SK rank across scenarios.
-
-    Per (base_type, rule, dataset, sample_size): run Scott-Knott on the k values
-    (each k has 30 run observations). Average SK rank across scenarios per
-    (base_type, rule, k). Return k with lowest mean SK rank.
-    """
     from aggregators.sk_impl import scott_knott
 
     SK_KW = {"a12_threshold": 0.60, "conf": 0.01, "seed": 42}
@@ -77,7 +56,6 @@ def _best_k_by_sk_rank(sub):
             result_dict[(bt, rule)] = int(grp.loc[grp["sk_rank"].idxmin(), "k"])
     return result_dict
 
-
 def _draw_heatmap(best_k_dict, base_types, title, out_dir, fname):
     mat = np.full((len(base_types), len(RULES)), np.nan)
     for i, bt in enumerate(base_types):
@@ -109,7 +87,6 @@ def _draw_heatmap(best_k_dict, base_types, title, out_dir, fname):
     fig.tight_layout()
     save_figure(fig, os.path.join(out_dir, fname))
 
-
 def generate(df_ens_raw, figures_dir, model_order=None):
     out_dir    = os.path.join(figures_dir, "f_k_heatmap")
     base_types = model_order or sorted(df_ens_raw["base_type"].unique())
@@ -130,13 +107,11 @@ def generate(df_ens_raw, figures_dir, model_order=None):
         "Best $k$ by mean SK rank — all scenarios",
         out_dir, "f_k_heatmap_mean_sk_rank_all.pdf"
     )
-    # keep the original filename too so existing references still work
     _draw_heatmap(
         _best_k_by_agg(sub, "median"), base_types,
         "Best $k$ by median MRE — all scenarios",
         out_dir, "f_k_heatmap.pdf"
     )
-
 
 def generate_s1(df_ens_raw, figures_dir, model_order=None):
     out_dir    = os.path.join(figures_dir, "f_k_heatmap")
@@ -158,7 +133,6 @@ def generate_s1(df_ens_raw, figures_dir, model_order=None):
         "Best $k$ by mean SK rank — S1 only",
         out_dir, "f_k_heatmap_mean_sk_rank_s1.pdf"
     )
-    # keep original S1 filename
     _draw_heatmap(
         _best_k_by_agg(sub, "median"), base_types,
         "Best $k$ by median MRE — S1 only",

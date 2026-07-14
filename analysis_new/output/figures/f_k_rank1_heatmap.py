@@ -1,21 +1,5 @@
-"""
-F_K_RANK1_HEATMAP: % of scenarios where k is in global SK rank-1 group (RQ3.2) — Idea 2.
+# F_K_RANK1_HEATMAP: % of scenarios where k is in global SK rank-1 group (RQ3.2) — Idea 2.
 
-SK is run GLOBALLY: all 8×3×9 = 216 (base_type, rule, k) ensembles compete
-together per (dataset, sample_size). Rank 1 = globally best ensemble group.
-
-Three-panel figure (one per rule: MEAN / IRWM / NN).
-Rows = base_type (8), columns = k (2..10).
-Color = % of scenarios where this (base_type, rule, k) lands in the globally best SK group.
-
-Reading key:
-  Dark cell  → this (model, k) is in the globally best group in most scenarios
-  Light cell → rarely globally competitive
-  No cell should be dark for weak models (LR, SVR) — they are outclassed globally
-
-Input: k_sk_ranks DataFrame from compute_k_sk_ranks_global
-  [base_type, rule, dataset, sample_size, k, sk_rank]
-"""
 import os
 import numpy as np
 import matplotlib
@@ -27,14 +11,11 @@ from .plot_utils import save_figure
 
 RULES = ["MEAN", "IRWM", "NN"]
 
-
 def _s1_filter(df):
     min_ss = df.groupby("dataset")["sample_size"].transform("min")
     return df[df["sample_size"] == min_ss]
 
-
 def _pct_rank1(k_sk_ranks, base_types, ks, rules):
-    """Return dict (rule → 2-D array [base_type, k]) of % in rank-1."""
     n_scenarios = (k_sk_ranks
                    .groupby(["base_type", "rule"])["dataset"]
                    .nunique().max()
@@ -57,7 +38,6 @@ def _pct_rank1(k_sk_ranks, base_types, ks, rules):
                 mat[i, j] = float((rows["sk_rank"] == 1).sum()) / n * 100
         result[rule] = mat
     return result
-
 
 def _draw(pct_mats, base_types, ks, out_dir, fname, suptitle):
     n_rules = len(RULES)
@@ -96,9 +76,7 @@ def _draw(pct_mats, base_types, ks, out_dir, fname, suptitle):
     fig.tight_layout()
     save_figure(fig, os.path.join(out_dir, fname))
 
-
 def generate(k_sk_ranks, figures_dir, model_order=None, suffix=""):
-    """% rank-1 heatmap — all scenarios."""
     out_dir    = os.path.join(figures_dir, "f_k_rank1_heatmap")
     base_types = model_order or sorted(k_sk_ranks["base_type"].unique())
     ks         = sorted(k_sk_ranks["k"].unique())
@@ -108,9 +86,7 @@ def generate(k_sk_ranks, figures_dir, model_order=None, suffix=""):
           fname=f"f_k_rank1_heatmap_all{suffix}.pdf",
           suptitle=f"% in best SK group — 40 scenarios{tag} (RQ3.2)")
 
-
 def generate_s1(k_sk_ranks, figures_dir, model_order=None, suffix=""):
-    """% rank-1 heatmap — S1 scenarios only."""
     out_dir    = os.path.join(figures_dir, "f_k_rank1_heatmap")
     base_types = model_order or sorted(k_sk_ranks["base_type"].unique())
     sub_s1     = _s1_filter(k_sk_ranks)

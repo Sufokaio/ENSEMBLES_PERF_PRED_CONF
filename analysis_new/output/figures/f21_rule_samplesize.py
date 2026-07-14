@@ -1,15 +1,5 @@
-"""
-F21: Rule Performance by Sample Size tier (RQ3.3).
+# F21: Rule Performance by Sample Size tier (RQ3.3).
 
-Two panels:
-  Left : MRE vs sample size tier S1–S5.  3 lines: MEAN / IRWM / NN.
-  Right: SA   vs sample size tier S1–S5.  3 lines: MEAN / IRWM / NN.
-
-Both panels aggregate across all base_types and datasets by tier rank.
-Two variants: median and mean aggregation.
-
-Key question: does NN's relative disadvantage shrink at larger N?
-"""
 import os
 import numpy as np
 import pandas as pd
@@ -22,7 +12,6 @@ from aggregators.comparisons import add_ensemble_sa_d
 
 RULES = ["MEAN", "IRWM", "NN"]
 
-
 def _add_sample_rank(df):
     df = df.copy()
     sizes = (
@@ -31,7 +20,6 @@ def _add_sample_rank(df):
     )
     sizes["sample_rank"] = sizes.groupby("dataset").cumcount() + 1
     return df.merge(sizes, on=["dataset", "sample_size"])
-
 
 def _make_figure(df_ens_rq33, df_baseline, agg_fn, agg_label):
     ens_aug = add_ensemble_sa_d(df_ens_rq33, df_baseline)
@@ -78,12 +66,7 @@ def _make_figure(df_ens_rq33, df_baseline, agg_fn, agg_label):
     fig.tight_layout()
     return fig
 
-
 def generate_per_base(df_ens_rq33, figures_dir, model_order=None):
-    """
-    8 subplots (2×4), one per base type.
-    x = S1–S5 tier, 3 lines per panel (MEAN/IRWM/NN), y = median MRE.
-    """
     from .plot_utils import RULE_COLORS, RULE_MARKERS
 
     out_dir    = os.path.join(figures_dir, "f21")
@@ -123,7 +106,6 @@ def generate_per_base(df_ens_rq33, figures_dir, model_order=None):
     fig.suptitle("MRE vs. sample size tier per base type — rule comparison (RQ3.3)")
     fig.tight_layout()
     save_figure(fig, os.path.join(out_dir, "f21_per_base_mre.pdf"))
-
 
 def generate(df_ens_rq33, df_baseline, figures_dir, sel_agg="median"):
     out_dir = os.path.join(figures_dir, "f21")

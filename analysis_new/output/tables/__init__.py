@@ -1,3 +1,5 @@
+# Re-exports all table-generating functions.
+
 from . import (
     t1_singles_rank, t2_rank_disagree, t3_ensemble_wtl, t4_lift, t5_rule_battle,
     t6_sk_groups, t7_disagree_matrix, t8_k_compare,

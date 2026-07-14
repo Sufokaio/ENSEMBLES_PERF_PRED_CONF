@@ -1,15 +1,5 @@
-"""
-F15: Win Rate Heatmap — Ensemble vs. Single (RQ2).
+# F15: Win Rate Heatmap — Ensemble vs. Single (RQ2).
 
-8 rows (base_type) × 5 cols (MRE / MAE / MBRE / MIBRE / SA).
-Color = win rate (% of 40 scenarios where best ensemble beats single).
-Annotated with exact win-rate value.
-Blue = ensemble dominates; red = single holds; 50% dashed reference line.
-
-Key question: is the ensemble advantage metric-consistent, or does it
-look strong on MRE but fragile on MIBRE and SA?  If columns diverge,
-that's direct evidence for the multi-metric evaluation protocol (C2).
-"""
 import os
 import numpy as np
 import pandas as pd
@@ -21,14 +11,7 @@ from .plot_utils import save_figure
 
 METRICS_DISPLAY = ["MRE", "MAE", "MBRE", "MIBRE", "SA"]
 
-
 def generate(wtl_df, figures_dir, model_order=None):
-    """
-    Parameters
-    ----------
-    wtl_df : output of comparisons.compute_wtl()
-             [base_type, metric, W, T, L, N, win_rate, ...]
-    """
     out_dir = os.path.join(figures_dir, "f15")
     models  = model_order or sorted(wtl_df["base_type"].unique())
 
@@ -40,7 +23,7 @@ def generate(wtl_df, figures_dir, model_order=None):
                 mat[i, j] = float(row.iloc[0]["win_rate"]) * 100
 
     fig, ax = plt.subplots(figsize=(6.2, 4.0))
-    cmap = matplotlib.cm.get_cmap("RdBu")  # red=0%, blue=100%
+    cmap = matplotlib.cm.get_cmap("RdBu")
     im = ax.imshow(mat, cmap=cmap, vmin=0, vmax=100, aspect="auto")
 
     ax.set_xticks(range(len(METRICS_DISPLAY)))

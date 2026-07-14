@@ -1,20 +1,5 @@
-"""
-F_K_SK_RANK_CURVE: Mean global SK rank vs k per base type (RQ3.2) — Idea 1.
+# F_K_SK_RANK_CURVE: Mean global SK rank vs k per base type (RQ3.2) — Idea 1.
 
-Same 2x4 panel layout as f_k_elbow_mean but y = mean SK rank across all
-40 scenarios. SK is run GLOBALLY: all 8x3x9 = 216 (base_type, rule, k)
-ensembles compete together per (dataset, sample_size).
-
-Three lines per panel (MEAN/IRWM/NN). Reference line at y = 1.
-
-Reading key:
-  Low y (close to 1) -> ensemble is in the globally best group in most scenarios
-  Decreasing curve   -> adding learners moves this (base_type, rule) up in the global ranking
-  Flat curve         -> k doesn't change this model's global standing
-
-Input: k_sk_ranks DataFrame from compute_k_sk_ranks_global or compute_k_sk_ranks_perrule
-  [base_type, rule, dataset, sample_size, k, sk_rank]
-"""
 import os
 import numpy as np
 import matplotlib
@@ -31,11 +16,9 @@ BASE_MARKERS = {
     "DeepPerf": "X", "HINNPerf": "*",
 }
 
-
 def _s1_filter(df):
     min_ss = df.groupby("dataset")["sample_size"].transform("min")
     return df[df["sample_size"] == min_ss]
-
 
 def _draw(mean_sk, base_types, ks, out_dir, fname, suptitle):
     n_bt  = len(base_types)
@@ -48,7 +31,6 @@ def _draw(mean_sk, base_types, ks, out_dir, fname, suptitle):
         ax      = axes[idx // ncols][idx % ncols]
         bt_data = mean_sk[mean_sk["base_type"] == bt]
 
-        # Dashed line at best mean SK rank actually achieved by this base type
         best_rank = bt_data["sk_rank"].min()
         ax.axhline(best_rank, color="#888888", linewidth=0.9,
                    linestyle="--", zorder=0, label="_nolegend_")
@@ -77,9 +59,7 @@ def _draw(mean_sk, base_types, ks, out_dir, fname, suptitle):
     fig.tight_layout()
     save_figure(fig, os.path.join(out_dir, fname))
 
-
 def generate(k_sk_ranks, figures_dir, model_order=None, suffix=""):
-    """Mean SK rank vs k -- all 40 scenarios."""
     out_dir    = os.path.join(figures_dir, "f_k_sk_rank_curve")
     base_types = model_order or sorted(k_sk_ranks["base_type"].unique())
     mean_sk    = (k_sk_ranks
@@ -92,9 +72,7 @@ def generate(k_sk_ranks, figures_dir, model_order=None, suffix=""):
           suptitle=f"Mean SK rank vs $k$ -- all 40 scenarios{tag} (RQ3.2)\n"
                    "Dashed line at 1 = best group threshold")
 
-
 def generate_s1(k_sk_ranks, figures_dir, model_order=None, suffix=""):
-    """Mean SK rank vs k -- S1 scenarios only (per-dataset min sample size)."""
     out_dir    = os.path.join(figures_dir, "f_k_sk_rank_curve")
     base_types = model_order or sorted(k_sk_ranks["base_type"].unique())
     sub_s1     = _s1_filter(k_sk_ranks)
@@ -108,9 +86,7 @@ def generate_s1(k_sk_ranks, figures_dir, model_order=None, suffix=""):
           suptitle=f"Mean SK rank vs $k$ -- S1 per dataset{tag} (RQ3.2)\n"
                    "Dashed line at 1 = best group threshold")
 
-
 def _draw_byrule(mean_sk, base_types, ks, out_dir, fname, suptitle):
-    """3 panels (one per rule), 8 lines (one per base type), y = mean SK rank."""
     fig, axes = plt.subplots(1, 3, figsize=(12.0, 3.6), squeeze=False)
 
     for col, rule in enumerate(RULES):
@@ -147,9 +123,7 @@ def _draw_byrule(mean_sk, base_types, ks, out_dir, fname, suptitle):
     fig.tight_layout()
     save_figure(fig, os.path.join(out_dir, fname))
 
-
 def generate_byrule(k_sk_ranks, figures_dir, model_order=None, suffix=""):
-    """3 panels (per rule), 8 lines (per base type) — all 40 scenarios."""
     out_dir    = os.path.join(figures_dir, "f_k_sk_rank_curve")
     base_types = model_order or sorted(k_sk_ranks["base_type"].unique())
     mean_sk    = (k_sk_ranks
@@ -161,9 +135,7 @@ def generate_byrule(k_sk_ranks, figures_dir, model_order=None, suffix=""):
                  fname=f"f_k_sk_rank_curve_all{suffix}_byrule.pdf",
                  suptitle=f"Mean SK rank vs $k$ per rule — 8 base types{tag} (all 40 scenarios, RQ3.2)")
 
-
 def generate_s1_byrule(k_sk_ranks, figures_dir, model_order=None, suffix=""):
-    """3 panels (per rule), 8 lines (per base type) — S1 only."""
     out_dir    = os.path.join(figures_dir, "f_k_sk_rank_curve")
     base_types = model_order or sorted(k_sk_ranks["base_type"].unique())
     sub_s1     = _s1_filter(k_sk_ranks)

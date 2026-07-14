@@ -1,15 +1,5 @@
-"""
-F_K_PCT_RANK1_CURVE: % scenarios in SK rank-1 group vs k, per base type (RQ3.2).
+# F_K_PCT_RANK1_CURVE: % scenarios in SK rank-1 group vs k, per base type (RQ3.2).
 
-Same 2x4 panel layout as f_k_sk_rank_curve.
-y-axis = % of scenarios where (base_type, rule, k) lands in the globally best SK group.
-Three lines per panel (MEAN / IRWM / NN).
-Reference dashed line = best % actually achieved by this base type across all (rule, k).
-
-Supports direct claims: "from k=4, HINNPerf MEAN is in the best group in X% of scenarios."
-
-Input: k_sk_ranks DataFrame [base_type, rule, dataset, sample_size, k, sk_rank]
-"""
 import os
 import numpy as np
 import matplotlib
@@ -20,14 +10,11 @@ from .plot_utils import RULE_COLORS, RULE_MARKERS, save_figure
 
 RULES = ["MEAN", "IRWM", "NN"]
 
-
 def _s1_filter(df):
     min_ss = df.groupby("dataset")["sample_size"].transform("min")
     return df[df["sample_size"] == min_ss]
 
-
 def _pct_rank1(k_sk_ranks):
-    """Return DataFrame [base_type, rule, k, pct_rank1]."""
     rows = []
     for (bt, rule, k), grp in k_sk_ranks.groupby(["base_type", "rule", "k"]):
         n = grp.groupby(["dataset", "sample_size"]).ngroups
@@ -35,7 +22,6 @@ def _pct_rank1(k_sk_ranks):
         rows.append({"base_type": bt, "rule": rule, "k": k, "pct_rank1": pct})
     import pandas as pd
     return pd.DataFrame(rows)
-
 
 def _draw(pct_df, base_types, ks, out_dir, fname, suptitle):
     ncols = 4
@@ -47,7 +33,6 @@ def _draw(pct_df, base_types, ks, out_dir, fname, suptitle):
         ax      = axes[idx // ncols][idx % ncols]
         bt_data = pct_df[pct_df["base_type"] == bt]
 
-        # Best % achieved by this base type across all (rule, k)
         best_pct = bt_data["pct_rank1"].max()
         ax.axhline(best_pct, color="#888888", linewidth=0.9,
                    linestyle="--", zorder=0, label="_nolegend_")
@@ -76,9 +61,7 @@ def _draw(pct_df, base_types, ks, out_dir, fname, suptitle):
     fig.tight_layout()
     save_figure(fig, os.path.join(out_dir, fname))
 
-
 def generate(k_sk_ranks, figures_dir, model_order=None, suffix=""):
-    """% rank-1 line plot — all scenarios."""
     out_dir    = os.path.join(figures_dir, "f_k_pct_rank1_curve")
     base_types = model_order or sorted(k_sk_ranks["base_type"].unique())
     pct_df     = _pct_rank1(k_sk_ranks)
@@ -89,9 +72,7 @@ def generate(k_sk_ranks, figures_dir, model_order=None, suffix=""):
           suptitle=f"% in best SK group vs $k$ — 40 scenarios{tag} (RQ3.2)\n"
                    "Dashed = best % achieved by this base type across all rules/k")
 
-
 def generate_s1(k_sk_ranks, figures_dir, model_order=None, suffix=""):
-    """% rank-1 line plot — S1 scenarios only."""
     out_dir    = os.path.join(figures_dir, "f_k_pct_rank1_curve")
     base_types = model_order or sorted(k_sk_ranks["base_type"].unique())
     sub_s1     = _s1_filter(k_sk_ranks)

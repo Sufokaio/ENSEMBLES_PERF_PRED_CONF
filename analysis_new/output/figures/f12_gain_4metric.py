@@ -1,15 +1,5 @@
-"""
-F12: 4-Metric Ensemble Gain Heatmap (RQ2).
+# F12: 4-Metric Ensemble Gain Heatmap (RQ2).
 
-Extension of F2 to all four error metrics: MRE | MAE | MBRE | MIBRE.
-Each panel: rows = base_type (8), cols = dataset (8).
-Color = median imp% (positive = ensemble wins).
-Shared diverging colorscale so metric-to-metric comparisons are honest.
-
-Key question: does ensemble gain hold consistently across all 4 metrics,
-or does the protocol reveal cases where it looks good on MRE but not on MBRE/MIBRE?
-This figure makes C2 concrete inside RQ2.
-"""
 import os
 import numpy as np
 import pandas as pd
@@ -21,20 +11,12 @@ from .plot_utils import save_figure
 
 METRICS_EVAL = ["MRE", "MAE", "MBRE", "MIBRE"]
 
-
 def generate(df_singles_best, df_ens_best_rq2, figures_dir,
              model_order=None, dataset_order=None):
-    """
-    Parameters
-    ----------
-    df_singles_best : best-variant singles long-format
-    df_ens_best_rq2 : best-variant ensembles (RQ2) long-format
-    """
     out_dir  = os.path.join(figures_dir, "f12")
     models   = model_order   or sorted(df_ens_best_rq2["base_type"].unique())
     datasets = dataset_order or sorted(df_singles_best["dataset"].unique())
 
-    # Pre-compute all imp% matrices and find global vmax for shared colorscale
     mats = {}
     vmax_global = 0.0
     for metric in METRICS_EVAL:
@@ -92,10 +74,8 @@ def generate(df_singles_best, df_ens_best_rq2, figures_dir,
     fig.tight_layout()
     save_figure(fig, os.path.join(out_dir, "f12_gain_4metric.pdf"))
 
-
 def generate_s1(df_singles_best, df_ens_best_rq2, figures_dir,
                 model_order=None, dataset_order=None):
-    """S1-only variant: filter to smallest sample_size per dataset (8 scenarios)."""
     out_dir  = os.path.join(figures_dir, "f12")
     models   = model_order   or sorted(df_ens_best_rq2["base_type"].unique())
     datasets = dataset_order or sorted(df_singles_best["dataset"].unique())

@@ -1,13 +1,9 @@
-"""
-Scott-Knott clustering for ranking treatments.
-Copied verbatim from conf-repo/sk_implementation.py (bootstrap + A12 variant).
-Params used throughout: a12_threshold=0.60, conf=0.01, seed=42.
-"""
+# Scott-Knott clustering for ranking treatments.
+
 import random
 import math
 from functools import reduce
 from joblib import Parallel, delayed
-
 
 def a12(lst1, lst2):
     more = same = 0.0
@@ -19,7 +15,6 @@ def a12(lst1, lst2):
                 same += 1
     n1, n2 = len(lst1), len(lst2)
     return (more + 0.5 * same) / (n1 * n2)
-
 
 def bootstrap(lst1, lst2, conf=0.01, b=1000, n_jobs=-1, seed=42):
     def test_stat(y, z):
@@ -48,13 +43,8 @@ def bootstrap(lst1, lst2, conf=0.01, b=1000, n_jobs=-1, seed=42):
     bigger = sum(Parallel(n_jobs=n_jobs)(delayed(boot_one)(s) for s in seeds))
     return bigger / b < conf
 
-
 def scott_knott(groups, cohen=0.3, small=3, use_a12=True, conf=0.01,
                 a12_threshold=0.60, seed=42):
-    """
-    groups: list of (name, [values]) pairs.
-    Returns: list of (rank, name, median, iqr, values)
-    """
     def median(lst):
         lst = sorted(lst)
         n = len(lst)

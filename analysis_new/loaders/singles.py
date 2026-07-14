@@ -1,29 +1,12 @@
-"""
-Load all single-model metric result files.
+# Load all single-model metric result files.
 
-File layout: {results_dir}/{dataset}/{sample_size}/{model_type}_metrics_results.json
-
-Each JSON is an array of hyperparameter-config objects, each with:
-  Rank, Params, Metrics -> {MRE, MAE, MBRE, MIBRE, SA, D, SA_5, LSD} (30 values per run)
-
-SA_5 and LSD are skipped here; SA_5 is loaded via baseline.py.
-"""
 import os
 import json
 import pandas as pd
 
 _SKIP_METRICS = {"SA_5", "LSD"}
 
-
 def load_singles(results_dir):
-    """
-    Returns long-format DataFrame:
-      dataset | sample_size | model_type | config_id | run | metric | value
-
-    Metrics included: MRE, MAE, MBRE, MIBRE, SA, D
-    config_id = 0-based index into the JSON array (hyperparameter config index).
-    run = 0-based index into the 30-run array.
-    """
     rows = []
     for ds_entry in _scan_dirs(results_dir):
         dataset = ds_entry.name
@@ -61,7 +44,6 @@ def load_singles(results_dir):
     if not df.empty:
         df["sample_size"] = df["sample_size"].astype(int)
     return df
-
 
 def _scan_dirs(path):
     return [e for e in os.scandir(path) if e.is_dir()]

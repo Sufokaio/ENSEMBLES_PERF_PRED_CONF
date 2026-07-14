@@ -1,11 +1,5 @@
-"""
-T1: Rank-Annotated Multi-Metric Table for Single Models (RQ1 primary).
+# T1: Rank-Annotated Multi-Metric Table for Single Models (RQ1 primary).
 
-Produces 4 variants: (scope: all|s1) x (agg: mean|median).
-Columns: Model | MRE | MAE | MBRE | MIBRE | SA (mean ± SD) | Borda rank
-Cell format: central (spread)_{mean_SK_rank}
-Bold = best per column.
-"""
 import os
 import numpy as np
 import pandas as pd
@@ -14,31 +8,13 @@ from output.utils import bold, save_tex, fmt_cell
 
 METRICS_EVAL = ["MRE", "MAE", "MBRE", "MIBRE"]
 
-
 def generate(df_singles_best, sk_df, borda_per_metric, borda_global,
              latex_dir, model_order=None):
-    """
-    Parameters
-    ----------
-    df_singles_best : best-variant singles long-format (with SA and D metrics)
-    sk_df           : SK ranks DataFrame [dataset, sample_size, metric, model_type, sk_rank]
-    borda_per_metric: [metric, model_type, borda_total]
-    borda_global    : [model_type, borda_total_all, borda_rank]
-    latex_dir       : output directory
-    model_order     : list of model types in display order
-    """
     out_dir = os.path.join(latex_dir, "t1")
     models  = model_order or sorted(df_singles_best["model_type"].unique())
 
-    # FINAL SET: only mean, all scenarios
     _one_variant(df_singles_best, sk_df, borda_global,
                  models, "all", "mean", out_dir)
-    # Commented-out variants (not in final paper):
-    # for scope in ("all", "s1"):
-    #     for agg in ("mean", "median"):
-    #         _one_variant(df_singles_best, sk_df, borda_global,
-    #                      models, scope, agg, out_dir)
-
 
 def _filter_scope(df, scope):
     if scope == "s1":
@@ -48,12 +24,10 @@ def _filter_scope(df, scope):
         df = df[df["sample_size"] == df["_min"]].drop(columns="_min")
     return df
 
-
 def _one_variant(df_all, sk_all, borda_global, models, scope, agg, out_dir):
     df   = _filter_scope(df_all, scope)
     sk   = _filter_scope(sk_all, scope)
 
-    # Build per-model data
     rows = []
     for model in models:
         row = {"Model": model}
@@ -72,19 +46,16 @@ def _one_variant(df_all, sk_all, borda_global, models, scope, agg, out_dir):
             rank_disp = f"{mean_sk:.1f}" if not np.isnan(mean_sk) else "--"
             row[metric] = (c, s, rank_disp, mean_sk)
 
-        # SA column: mean ± SD across all scenarios (no SK rank for SA)
         sa_vals = df[(df["model_type"] == model) & (df["metric"] == "SA")]["value"].values
         d_vals  = df[(df["model_type"] == model) & (df["metric"] == "D")]["value"].values
         sa_mean = float(np.mean(sa_vals)) if len(sa_vals) > 0 else np.nan
         d_mean  = float(np.mean(d_vals))  if len(d_vals)  > 0 else np.nan
         row["SA"] = (sa_mean, d_mean)
 
-        # Borda rank from global
         bg_row = borda_global[borda_global["model_type"] == model]
         row["borda_rank"] = int(bg_row["borda_rank"].values[0]) if len(bg_row) else "--"
         rows.append(row)
 
-    # Find best (lowest central) per metric column
     best = {}
     for metric in METRICS_EVAL:
         vals = [r[metric][0] for r in rows
@@ -93,7 +64,6 @@ def _one_variant(df_all, sk_all, borda_global, models, scope, agg, out_dir):
     best_sa = max((r["SA"][0] for r in rows if not np.isnan(r["SA"][0])), default=np.nan)
     best_borda = min((r["borda_rank"] for r in rows if isinstance(r["borda_rank"], int)), default=None)
 
-    # Compose LaTeX
     col_spec = "l" + "c" * (len(METRICS_EVAL) + 1) + "c"
     header = "Model & " + " & ".join(METRICS_EVAL) + r" & SA (mean D) & Borda \\"
     lines = [

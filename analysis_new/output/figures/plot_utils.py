@@ -1,6 +1,5 @@
-"""
-Shared matplotlib utilities for all figure emitters.
-"""
+# Shared matplotlib utilities for all figure emitters.
+
 import os
 import numpy as np
 import matplotlib
@@ -8,7 +7,6 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 
-# Publication style (sans-serif, matching conf-repo aesthetic)
 plt.rcParams.update({
     "font.size":        9,
     "axes.labelsize":   9,
@@ -42,21 +40,17 @@ RULE_COLORS = {
 
 RULE_MARKERS = {"MEAN": "o", "IRWM": "s", "NN": "^"}
 
-
 DS_DISPLAY = {
     "apache": "APACHE", "bdbc": "BDBC", "dune": "DUNE",
     "hipacc": "HIPACC", "hsmgp": "HSMGP", "kanzi": "KANZI",
     "lrzip": "LRZIP", "x264": "X264",
 }
 
-
 def ds_label(name):
     return DS_DISPLAY.get(name.lower(), name.upper())
 
-
 def get_model_color(name):
     return MODEL_COLORS.get(name, "#333333")
-
 
 def save_figure(fig, path, fmt="pdf"):
     os.makedirs(os.path.dirname(path), exist_ok=True)

@@ -1,23 +1,13 @@
-"""
-Scott-Knott clustering for ranking treatments.
-Same algorithm as sk_impl_prev.py (bootstrap + A12 variant).
-Params used throughout: a12_threshold=0.60, conf=0.01, seed=42.
+# Scott-Knott clustering for ranking treatments.
 
-bootstrap and a12 are vectorised with numpy (no joblib).
-~51x faster than the original joblib version; same results except on
-borderline p-values near 0.01 where the two differ due to RNG (PCG64 here
-vs Python random.Random in prev). Both are statistically valid.
-"""
 import math
 import numpy as np
-
 
 def a12(lst1, lst2):
     x, y = np.asarray(lst1, float), np.asarray(lst2, float)
     more = (x[:, None] > y[None, :]).sum()
     same = (x[:, None] == y[None, :]).sum()
     return (more + 0.5 * same) / (len(x) * len(y))
-
 
 def bootstrap(lst1, lst2, conf=0.01, b=1000, seed=42):
     rng = np.random.default_rng(seed)
@@ -42,13 +32,8 @@ def bootstrap(lst1, lst2, conf=0.01, b=1000, seed=42):
     t_boot = (zb_mu - yb_mu) / d
     return (t_boot > tobs).sum() / b < conf
 
-
 def scott_knott(groups, cohen=0.3, small=3, use_a12=True, conf=0.01,
                 a12_threshold=0.60, seed=42):
-    """
-    groups: list of (name, [values]) pairs.
-    Returns: list of (rank, name, median, iqr, values)
-    """
     def median(lst):
         lst = sorted(lst)
         n = len(lst)
@@ -106,6 +91,3 @@ def scott_knott(groups, cohen=0.3, small=3, use_a12=True, conf=0.01,
         return ranks
 
     return sorted(recursive(groups), key=lambda x: x[0])
-
-
-

@@ -1,15 +1,5 @@
-"""
-F_RQ33_RULE_RANK_HEATMAP: 8x3 heatmap of mean SK rank per (base_type, rule) — RQ3.3.
+# F_RQ33_RULE_RANK_HEATMAP: 8x3 heatmap of mean SK rank per (base_type, rule) — RQ3.3.
 
-Rows = 8 base types, cols = MEAN / IRWM / NN.
-Color = mean SK rank averaged across all 40 evaluation scenarios.
-Number in each cell shows the exact value.
-
-Low rank (dark) = statistically better. Ties appear as visually similar colors.
-Each rule uses its per-scenario best k (from sk_rq33).
-
-Input: sk_rq33 DataFrame [base_type, rule, dataset, sample_size, sk_rank]
-"""
 import os
 import numpy as np
 import matplotlib
@@ -21,11 +11,9 @@ from .plot_utils import save_figure
 
 RULES = ["MEAN", "IRWM", "NN"]
 
-
 def _s1_filter(df):
     min_ss = df.groupby("dataset")["sample_size"].transform("min")
     return df[df["sample_size"] == min_ss]
-
 
 def _build_mat(sk_rq33, base_types):
     mean_sk = (sk_rq33
@@ -39,7 +27,6 @@ def _build_mat(sk_rq33, base_types):
             if not val.empty:
                 mat[i, j] = val.values[0]
     return mat
-
 
 def _draw(mat, base_types, out_dir, fname, title):
     vmin = np.nanmin(mat)
@@ -70,7 +57,6 @@ def _draw(mat, base_types, out_dir, fname, title):
     fig.tight_layout()
     save_figure(fig, os.path.join(out_dir, fname))
 
-
 def generate(sk_rq33, figures_dir, model_order=None):
     out_dir    = os.path.join(figures_dir, "f_rq33_rule_rank_heatmap")
     base_types = model_order or sorted(sk_rq33["base_type"].unique())
@@ -78,7 +64,6 @@ def generate(sk_rq33, figures_dir, model_order=None):
     _draw(mat, base_types, out_dir,
           "f_rq33_rule_rank_heatmap_all.pdf",
           "Mean SK rank per (base type, rule) — best $k$ per scenario, 40 scenarios (RQ3.3)")
-
 
 def generate_s1(sk_rq33, figures_dir, model_order=None):
     out_dir    = os.path.join(figures_dir, "f_rq33_rule_rank_heatmap")

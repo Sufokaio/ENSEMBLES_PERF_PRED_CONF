@@ -1,30 +1,14 @@
-"""
-T_CROSS_WIN: Cross-level win matrix (RQ2).
+# T_CROSS_WIN: Cross-level win matrix (RQ2).
 
-8×8 table. Cell (i,j) = % of 40 scenarios where
-ensemble of base_type i beats single of base_type j on MRE.
-
-Diagonal (i==j) is the standard RQ2 comparison; bold there.
-"""
 import os
 import numpy as np
 import pandas as pd
 
 from output.utils import bold, save_tex
 
-
 def generate(cross_win_df, latex_dir, model_order=None):
-    """
-    Parameters
-    ----------
-    cross_win_df : 8×8 DataFrame (reset_index from parquet) or already indexed
-                   Rows = ensemble base type, Cols = single base type.
-                   If loaded from parquet (reset_index'd), the row labels are in
-                   the first column.
-    """
     out_dir = os.path.join(latex_dir, "t_cross_win")
 
-    # Handle the _row_label column added when saving to parquet
     if "_row_label" in cross_win_df.columns:
         cwm = cross_win_df.set_index("_row_label")
         cwm.index.name = None
@@ -37,7 +21,6 @@ def generate(cross_win_df, latex_dir, model_order=None):
     cwm = cwm.reindex(index=base_types, columns=base_types)
 
     col_spec = "l" + "c" * len(base_types)
-    # Abbreviated column headers to fit
     short = {m: m[:3] for m in base_types}
     lines = [
         r"\begin{tabular}{" + col_spec + "}",
@@ -59,7 +42,6 @@ def generate(cross_win_df, latex_dir, model_order=None):
                 elif v >= 75:
                     cell = bold(cell)
         cells.append(cell if not np.isnan(v) else "--")
-        # Rebuild properly:
         cells = [bt_i]
         for bt_j in base_types:
             v = cwm.at[bt_i, bt_j]

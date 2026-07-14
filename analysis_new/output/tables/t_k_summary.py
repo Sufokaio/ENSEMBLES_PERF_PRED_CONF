@@ -1,16 +1,5 @@
-"""
-T_K_SUMMARY: Tabular summary of optimal k analysis (RQ3.2).
+# T_K_SUMMARY: Tabular summary of optimal k analysis (RQ3.2).
 
-24 rows (8 base types x 3 rules). Columns:
-  k*(med)   — k with lowest global median MRE across all scenarios
-  k*(mean)  — k with lowest global mean MRE across all scenarios
-  k*(rank)  — k with lowest mean Friedman rank across scenarios
-               (per scenario rank k values 1..N by median MRE; average those ranks)
-  MRE(k=2)  — median MRE at k=2 (baseline)
-  MRE(k*)   — median MRE at k*(med) (best achievable)
-  Gain%     — (MRE(k=2) - MRE(k*)) / MRE(k=2) * 100
-  k*>5 %    — % of 40 scenarios where per-scenario best k > 5
-"""
 import os
 import numpy as np
 import pandas as pd
@@ -18,7 +7,6 @@ import pandas as pd
 from output.utils import bold, save_tex
 
 RULES = ["MEAN", "IRWM", "NN"]
-
 
 def _best_k_by_agg(sub, agg_fn):
     agg = sub.groupby(["base_type", "rule", "k"])["value"].agg(agg_fn).reset_index()
@@ -28,9 +16,7 @@ def _best_k_by_agg(sub, agg_fn):
             result[(bt, rule)] = int(grp.loc[grp["value"].idxmin(), "k"])
     return result
 
-
 def _best_k_by_sk_rank(sub):
-    """k with lowest mean SK rank across scenarios (actual Scott-Knott test per scenario)."""
     from aggregators.sk_impl import scott_knott
 
     SK_KW = {"a12_threshold": 0.60, "conf": 0.01, "seed": 42}
@@ -57,7 +43,6 @@ def _best_k_by_sk_rank(sub):
             result[(bt, rule)] = int(grp.loc[grp["sk_rank"].idxmin(), "k"])
     return result
 
-
 def generate(df_ens_raw, latex_dir, model_order=None):
     out_dir    = os.path.join(latex_dir, "t_k_summary")
     base_types = model_order or sorted(df_ens_raw["base_type"].unique())
@@ -68,10 +53,8 @@ def generate(df_ens_raw, latex_dir, model_order=None):
     k_mean = _best_k_by_agg(sub, "mean")
     k_rank = _best_k_by_sk_rank(sub)
 
-    # Global aggregation per (base_type, rule, k)
     global_med = sub.groupby(["base_type", "rule", "k"])["value"].median().reset_index(name="med_mre")
 
-    # Per-scenario best k for %k>5
     per_scen = sub.groupby(["base_type", "rule", "dataset", "sample_size", "k"])["value"].median().reset_index(name="med_mre")
     idx_best = per_scen.groupby(["base_type", "rule", "dataset", "sample_size"])["med_mre"].idxmin()
     best_k_per_scen = per_scen.loc[idx_best, ["base_type", "rule", "dataset", "sample_size", "k"]]
@@ -157,29 +140,17 @@ def generate(df_ens_raw, latex_dir, model_order=None):
     ]
     save_tex(lines, os.path.join(out_dir, "t_k_summary.tex"))
 
-
 def generate_by_base(df_ens_raw, latex_dir, model_order=None):
-    """Compact 8-row table: per base type, rules aggregated.
-
-    Rows = base type (8). Columns:
-      k*(med)   — k with lowest global median MRE across all rules & datasets
-      MRE(k=2)  — median MRE at k=2 (agg. across rules & datasets)
-      MRE(k*)   — median MRE at k* (agg. across rules & datasets)
-      Gain%     — (MRE(k=2) − MRE(k*)) / MRE(k=2) × 100
-      k*>5 %    — % of 40×3=120 (scenario, rule) combos where per-combo best k > 5
-    """
     out_dir    = os.path.join(latex_dir, "t_k_summary")
     base_types = model_order or sorted(df_ens_raw["base_type"].unique())
 
     sub = df_ens_raw[df_ens_raw["metric"] == "MRE"].copy()
 
-    # Global aggregation across rules AND datasets
     global_med = (
         sub.groupby(["base_type", "k"])["value"]
         .median().reset_index(name="med_mre")
     )
 
-    # Per-scenario-rule best k (for %k>5)
     per_combo = (
         sub.groupby(["base_type", "rule", "dataset", "sample_size", "k"])["value"]
         .median().reset_index(name="med_mre")
@@ -241,31 +212,18 @@ def generate_by_base(df_ens_raw, latex_dir, model_order=None):
     ]
     save_tex(lines, os.path.join(out_dir, "t_k_summary_bybase.tex"))
 
-
 def generate_threshold(df_ens_raw, latex_dir, model_order=None, threshold=0.90):
-    """Table idea A: k-threshold table (RQ3.2).
-
-    For each (base_type, rule): the smallest k that captures ≥`threshold` of the
-    total MRE gain from k=2 to k=10.
-
-    Answers: 'what is the practical minimum k?' — k_thresh=2 means gains plateau
-    immediately; k_thresh=9 means you need many learners to extract value.
-
-    Rows: base types. Column groups: MEAN | IRWM | NN, each showing k_thresh.
-    """
     out_dir    = os.path.join(latex_dir, "t_k_summary")
     base_types = model_order or sorted(df_ens_raw["base_type"].unique())
 
     sub = df_ens_raw[df_ens_raw["metric"] == "MRE"].copy()
 
-    # Global median MRE per (base_type, rule, k)
     global_med = (
         sub.groupby(["base_type", "rule", "k"])["value"]
         .median().reset_index(name="med_mre")
     )
 
     def _threshold_k(g):
-        """Smallest k where gain from k=2 to k >= threshold * (gain from k=2 to k=10)."""
         ks  = sorted(g["k"].unique())
         mre = {int(row["k"]): row["med_mre"] for _, row in g.iterrows()}
         mre2  = mre.get(2,  np.nan)
@@ -274,12 +232,12 @@ def generate_threshold(df_ens_raw, latex_dir, model_order=None, threshold=0.90):
             return "--"
         total_gain = mre2 - mre10
         if total_gain <= 0:
-            return 2  # no gain at all — k=2 already achieves everything
-        target = mre2 - threshold * total_gain  # MRE level that corresponds to `threshold` of gain
+            return 2
+        target = mre2 - threshold * total_gain
         for k in ks:
             if mre.get(k, np.nan) <= target:
                 return k
-        return ks[-1]  # need all learners
+        return ks[-1]
 
     records = {}
     for (bt, rule), grp in global_med.groupby(["base_type", "rule"]):
@@ -312,24 +270,12 @@ def generate_threshold(df_ens_raw, latex_dir, model_order=None, threshold=0.90):
     ]
     save_tex(lines, os.path.join(out_dir, "t_k_threshold.tex"))
 
-
 def generate_fixed_k(df_ens_raw, latex_dir, model_order=None, fixed_ks=(2, 5)):
-    """Table idea B: Fixed-k sensitivity table (RQ3.2).
-
-    For each base type (rules aggregated): MRE at k=optimal, and the % extra error
-    incurred by using each fixed k instead.
-
-    Rows: base types. Columns: k*(optimal) | MRE(k*) | %extra(k=2) | %extra(k=5) | %extra(k=10).
-
-    Answers: 'if I always use k=5, how much do I sacrifice per model type?'
-    A value near 0% means k=5 is fine; a larger value means you should tune k.
-    """
     out_dir    = os.path.join(latex_dir, "t_k_summary")
     base_types = model_order or sorted(df_ens_raw["base_type"].unique())
 
     sub = df_ens_raw[df_ens_raw["metric"] == "MRE"].copy()
 
-    # Global median across rules AND datasets
     global_med = (
         sub.groupby(["base_type", "k"])["value"]
         .median().reset_index(name="med_mre")

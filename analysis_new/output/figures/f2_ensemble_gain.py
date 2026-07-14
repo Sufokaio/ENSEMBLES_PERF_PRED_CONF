@@ -1,12 +1,5 @@
-"""
-F2: Ensemble Gain Heatmap (RQ2).
+# F2: Ensemble Gain Heatmap (RQ2).
 
-Matrix: 8 rows (datasets) × 8 cols (base types).
-Color = median imp% of best ensemble over single (MRE primary).
-Diverging colormap: red = ensemble loses, green = ensemble wins.
-
-Variant F2b: two-panel figure (MRE + MIBRE) to show metric disagreement.
-"""
 import os
 import numpy as np
 import pandas as pd
@@ -17,16 +10,8 @@ import matplotlib.colors as mcolors
 
 from .plot_utils import save_figure
 
-
 def generate(df_singles_best, df_ens_best, figures_dir,
              model_order=None, dataset_order=None, agg="median"):
-    """
-    Parameters
-    ----------
-    df_singles_best : best-variant singles [model_type, dataset, sample_size, metric, value, run]
-    df_ens_best     : best-variant ensembles (RQ2) [base_type, dataset, sample_size, ...]
-    agg             : "median" or "mean"
-    """
     out_dir = os.path.join(figures_dir, "f2")
     models   = model_order   or sorted(df_ens_best["base_type"].unique())
     datasets = dataset_order or sorted(df_singles_best["dataset"].unique())
@@ -36,10 +21,8 @@ def generate(df_singles_best, df_ens_best, figures_dir,
     _make_heatmap(df_singles_best, df_ens_best, models, datasets, ["MRE"],
                   fn, agg, "mre", out_dir)
 
-
 def generate_s1(df_singles_best, df_ens_best, figures_dir,
                 model_order=None, dataset_order=None, agg="median"):
-    """S1-only variant: filter to smallest sample size per dataset (8 scenarios)."""
     out_dir  = os.path.join(figures_dir, "f2")
     models   = model_order   or sorted(df_ens_best["base_type"].unique())
     datasets = dataset_order or sorted(df_singles_best["dataset"].unique())
@@ -53,7 +36,6 @@ def generate_s1(df_singles_best, df_ens_best, figures_dir,
     s1_e = s1_e[s1_e["sample_size"] == s1_e["_min"]].drop(columns="_min")
 
     _make_heatmap(s1_s, s1_e, models, datasets, ["MRE"], fn, agg, "mre_s1", out_dir)
-
 
 def _make_heatmap(df_s, df_e, models, datasets, metrics, fn, agg_label, tag, out_dir):
     n_panels = len(metrics)
@@ -75,7 +57,6 @@ def _make_heatmap(df_s, df_e, models, datasets, metrics, fn, agg_label, tag, out
                 e_c = float(fn(e_vals))
                 if abs(s_c) < 1e-12:
                     continue
-                # imp% > 0 means ensemble is better (lower error)
                 imp = (s_c - e_c) / abs(s_c) * 100
                 mat[i, j] = imp
 
@@ -89,7 +70,6 @@ def _make_heatmap(df_s, df_e, models, datasets, metrics, fn, agg_label, tag, out
         ax.set_yticklabels(datasets if panel_idx == 0 else [], fontsize=7)
         ax.set_title(f"{metric} imp\\%")
 
-        # Annotate cells
         for i in range(len(datasets)):
             for j in range(len(models)):
                 v = mat[i, j]

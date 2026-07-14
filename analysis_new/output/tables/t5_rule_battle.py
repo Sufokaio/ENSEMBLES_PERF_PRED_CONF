@@ -1,11 +1,5 @@
-"""
-T5: Combination Rule Battle Royale (RQ3.3).
+# T5: Combination Rule Battle Royale (RQ3.3).
 
-Option A (primary): 8 rows (base types) × 3 rule groups (MEAN | IRWM | NN).
-  Cell = central (spread)_{mean_SK_rank} for primary metric (MRE).
-
-Option C (complement): W/T/L pairwise win counts across 40 scenarios.
-"""
 import os
 import numpy as np
 import pandas as pd
@@ -15,14 +9,7 @@ from output.utils import bold, save_tex, fmt_cell
 RULES        = ["MEAN", "IRWM", "NN"]
 METRICS_EVAL = ["MRE", "MAE", "MBRE", "MIBRE"]
 
-
 def generate(df_ens_rq33, sk_rq33, latex_dir, model_order=None):
-    """
-    Parameters
-    ----------
-    df_ens_rq33 : best-k-per-rule ensemble df [base_type, rule, dataset, sample_size, run, metric, value]
-    sk_rq33     : SK ranks for the same df, group_col="base_type_rule" or computed here
-    """
     out_dir = os.path.join(latex_dir, "t5")
     models  = model_order or sorted(df_ens_rq33["base_type"].unique())
 
@@ -30,12 +17,7 @@ def generate(df_ens_rq33, sk_rq33, latex_dir, model_order=None):
         _option_a(df_ens_rq33, sk_rq33, models, agg, out_dir)
     _option_c(df_ens_rq33, models, out_dir)
 
-
 def _option_a(df, sk, models, agg, out_dir):
-    """T5 Option A: base_type × rule, cell = central(spread)_{SK rank}."""
-    # SK ranks were computed with a composite key; look them up per (base_type, rule)
-    # sk columns: dataset, sample_size, metric, base_type, rule, sk_rank  (if passed as-is)
-    # or the caller may have flattened them — handle both
     has_rule = "rule" in sk.columns
 
     rule_headers = " & ".join(
@@ -52,8 +34,7 @@ def _option_a(df, sk, models, agg, out_dir):
         r"\midrule",
     ]
 
-    # Collect all values for bolding
-    all_cells = {}  # (metric, rule) -> list of (model, central)
+    all_cells = {}
     for rule in RULES:
         for metric in METRICS_EVAL:
             vals_list = []
@@ -92,11 +73,9 @@ def _option_a(df, sk, models, agg, out_dir):
     lines += [r"\bottomrule", r"\end{tabular}"]
     save_tex(lines, os.path.join(out_dir, f"t5a_rule_battle_{agg}.tex"))
 
-
 def _option_c(df, models, out_dir):
-    """T5 Option C: W/T/L pairwise counts — MEAN vs IRWM, MEAN vs NN, IRWM vs NN."""
     pairs = [("MEAN", "IRWM"), ("MEAN", "NN"), ("IRWM", "NN")]
-    metric = "MRE"  # primary metric
+    metric = "MRE"
 
     pair_headers = " & ".join(
         rf"\multicolumn{{3}}{{c}}{{{a} vs {b}}}" for a, b in pairs
@@ -116,7 +95,6 @@ def _option_c(df, models, out_dir):
         for (r1, r2) in pairs:
             sub1 = df[(df["base_type"] == model) & (df["rule"] == r1) & (df["metric"] == metric)]
             sub2 = df[(df["base_type"] == model) & (df["rule"] == r2) & (df["metric"] == metric)]
-            # align on (dataset, sample_size, run)
             idx_cols = ["dataset", "sample_size", "run"]
             m = sub1.merge(sub2, on=idx_cols, suffixes=("_1", "_2"))
             if m.empty:

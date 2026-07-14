@@ -1,38 +1,18 @@
-"""
-T_K_VS_BASELINE: % of scenarios where k is statistically better than k=2 (RQ3.2) — Idea 3.
+# T_K_VS_BASELINE: % of scenarios where k is statistically better than k=2 (RQ3.2) — Idea 3.
 
-For each (base_type, rule, k ≥ 3): % of the 40 evaluation scenarios where k
-is in a statistically BETTER SK group than k=2 (i.e., sk_rank(k) < sk_rank(k=2)).
-
-Layout: three sub-tables side by side (one per rule), or one merged table.
-Rows = base type (8). Columns = k = 3, 4, ..., 10.
-
-Reading key:
-  0%  → k never beats k=2 statistically — just use k=2
-  50% → k beats k=2 in half of scenarios — sometimes worth it
-  90%+ → k almost always beats k=2 statistically — adding learners is consistently worthwhile
-
-Input: k_sk_ranks DataFrame [base_type, rule, dataset, sample_size, k, sk_rank]
-"""
 import os
 import numpy as np
 import pandas as pd
 
 from output.utils import save_tex
 
-
 RULES = ["MEAN", "IRWM", "NN"]
-
 
 def _s1_filter(df):
     min_ss = df.groupby("dataset")["sample_size"].transform("min")
     return df[df["sample_size"] == min_ss]
 
-
 def _compute_pct_better(k_sk_ranks, base_types, ks_compare):
-    """
-    Returns dict: (base_type, rule, k) → % scenarios where sk_rank(k) < sk_rank(k=2).
-    """
     result = {}
     for (bt, rule, ds, ss), grp in k_sk_ranks.groupby(
             ["base_type", "rule", "dataset", "sample_size"]):
@@ -50,9 +30,7 @@ def _compute_pct_better(k_sk_ranks, base_types, ks_compare):
 
     return {key: float(np.mean(vals)) * 100 for key, vals in result.items()}
 
-
 def _build_table(pct_dict, base_types, ks_compare, rule, note=""):
-    """Build LaTeX rows for one rule."""
     rows = []
     for bt in base_types:
         cells = [bt]
@@ -67,9 +45,7 @@ def _build_table(pct_dict, base_types, ks_compare, rule, note=""):
         rows.append(" & ".join(cells) + r" \\")
     return rows
 
-
 def generate(k_sk_ranks, latex_dir, model_order=None, suffix=""):
-    """Three sub-tables (one per rule), all 40 scenarios."""
     out_dir    = os.path.join(latex_dir, "t_k_vs_baseline")
     base_types = model_order or sorted(k_sk_ranks["base_type"].unique())
     all_ks     = sorted(k_sk_ranks["k"].unique())
@@ -104,9 +80,7 @@ def generate(k_sk_ranks, latex_dir, model_order=None, suffix=""):
                      fname=f"t_k_vs_baseline_merged{suffix}.tex",
                      n_scenarios=40)
 
-
 def generate_s1(k_sk_ranks, latex_dir, model_order=None, suffix=""):
-    """Three sub-tables + merged, S1 scenarios only."""
     out_dir    = os.path.join(latex_dir, "t_k_vs_baseline")
     base_types = model_order or sorted(k_sk_ranks["base_type"].unique())
     sub_s1     = _s1_filter(k_sk_ranks)
@@ -139,9 +113,7 @@ def generate_s1(k_sk_ranks, latex_dir, model_order=None, suffix=""):
                      fname=f"t_k_vs_baseline_s1_merged{suffix}.tex",
                      n_scenarios=8)
 
-
 def _generate_merged(pct, base_types, ks_compare, out_dir, fname, n_scenarios):
-    """One table: rows = base type, column groups per rule, columns = k."""
     k_head = " & ".join([f"$k$={k}" for k in ks_compare])
     rule_span = len(ks_compare)
     n_cols = 1 + rule_span * len(RULES)

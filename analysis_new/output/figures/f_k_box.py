@@ -1,10 +1,5 @@
-"""
-F_K_BOX: Distribution of MRE across (base_type × dataset) combos per k (RQ3.2).
+# F_K_BOX: Distribution of MRE across (base_type × dataset) combos per k (RQ3.2).
 
-3 panels (one per rule). x = k (2..10), box = distribution of
-median MRE across all (base_type, dataset) combinations.
-Shows variance at each k, not just the median trend.
-"""
 import os
 import numpy as np
 import pandas as pd
@@ -16,12 +11,10 @@ from .plot_utils import RULE_COLORS, save_figure
 
 RULES = ["MEAN", "IRWM", "NN"]
 
-
 def generate(df_ens_raw, figures_dir):
     out_dir = os.path.join(figures_dir, "f_k_box")
     sub = df_ens_raw[df_ens_raw["metric"] == "MRE"]
 
-    # Median per (base_type, dataset, rule, k) across runs
     agg = (
         sub.groupby(["base_type", "dataset", "rule", "k"])["value"]
         .median().reset_index()

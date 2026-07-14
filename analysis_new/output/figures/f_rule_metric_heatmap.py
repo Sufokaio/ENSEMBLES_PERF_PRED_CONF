@@ -1,12 +1,5 @@
-"""
-F_RULE_METRIC_HEATMAP: 3×4 heatmap — rule × metric (RQ3.3).
+# F_RULE_METRIC_HEATMAP: 3×4 heatmap — rule × metric (RQ3.3).
 
-Rows = combination rules (MEAN / IRWM / NN).
-Cols = metrics (MRE / MAE / MBRE / MIBRE).
-Color = column-normalized median value (0 = best rule for this metric,
-1 = worst) so metrics with different scales are comparable.
-Annotated with the raw median value.
-"""
 import os
 import numpy as np
 import pandas as pd
@@ -18,7 +11,6 @@ from .plot_utils import save_figure
 
 RULES   = ["MEAN", "IRWM", "NN"]
 METRICS = ["MRE", "MAE", "MBRE", "MIBRE"]
-
 
 def generate(df_ens_rq33, figures_dir):
     out_dir = os.path.join(figures_dir, "f_rule_metric_heatmap")
@@ -36,7 +28,7 @@ def generate(df_ens_rq33, figures_dir):
         mn, mx = min(medians), max(medians)
         span = mx - mn if mx != mn else 1.0
         for i in range(len(RULES)):
-            norm_mat[i, j] = (raw_mat[i, j] - mn) / span  # 0=best, 1=worst
+            norm_mat[i, j] = (raw_mat[i, j] - mn) / span
 
     fig, ax = plt.subplots(figsize=(6.5, 2.8))
     cmap = matplotlib.cm.get_cmap("YlOrRd")
@@ -54,7 +46,6 @@ def generate(df_ens_rq33, figures_dir):
         for j in range(len(METRICS)):
             raw = raw_mat[i, j]
             if not np.isnan(raw):
-                # Format based on magnitude
                 if abs(raw) >= 100:
                     txt = f"{raw:.0f}"
                 elif abs(raw) >= 1:
@@ -69,9 +60,7 @@ def generate(df_ens_rq33, figures_dir):
     fig.tight_layout()
     save_figure(fig, os.path.join(out_dir, "f_rule_metric_heatmap.pdf"))
 
-
 def _draw_panel(ax, sub_df, title):
-    """Draw one 3×4 rule×metric normalized heatmap onto ax."""
     raw_mat  = np.full((len(RULES), len(METRICS)), np.nan)
     norm_mat = np.full((len(RULES), len(METRICS)), np.nan)
     for j, metric in enumerate(METRICS):
@@ -104,9 +93,7 @@ def _draw_panel(ax, sub_df, title):
                         color="black" if norm_mat[i, j] < 0.6 else "white")
     return im
 
-
 def generate_per_base(df_ens_rq33, figures_dir, model_order=None):
-    """8 panels (one per base type), each = 3×4 rule×metric heatmap."""
     out_dir    = os.path.join(figures_dir, "f_rule_metric_heatmap")
     base_types = model_order or sorted(df_ens_rq33["base_type"].unique())
 
@@ -115,7 +102,7 @@ def generate_per_base(df_ens_rq33, figures_dir, model_order=None):
     fig, axes = plt.subplots(nrows, ncols, figsize=(ncols * 3.8, nrows * 2.8), squeeze=False)
 
     for idx, bt in enumerate(axes.flatten()[:len(base_types)]):
-        pass  # just a placeholder, actual loop below
+        pass
 
     for idx, bt in enumerate(base_types):
         ax = axes[idx // ncols][idx % ncols]
@@ -128,9 +115,7 @@ def generate_per_base(df_ens_rq33, figures_dir, model_order=None):
     fig.tight_layout()
     save_figure(fig, os.path.join(out_dir, "f_rule_metric_heatmap_per_base.pdf"))
 
-
 def generate_s1(df_ens_rq33, figures_dir, model_order=None):
-    """Same as generate() but filtered to S1 scenarios only."""
     out_dir = os.path.join(figures_dir, "f_rule_metric_heatmap")
     mins    = df_ens_rq33.groupby("dataset")["sample_size"].min().reset_index(name="_min")
     sub_s1  = df_ens_rq33.merge(mins, on="dataset").query("sample_size == _min").drop(columns="_min")

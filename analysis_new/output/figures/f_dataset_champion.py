@@ -1,9 +1,5 @@
-"""
-F_DATASET_CHAMPION: Per-dataset model dominance — who wins most sample sizes (RQ1).
+# F_DATASET_CHAMPION: Per-dataset model dominance — who wins most sample sizes (RQ1).
 
-For each (dataset, sample_size): model with lowest median MRE across 30 runs wins.
-Grouped bar chart: x = datasets, bars = count of sample sizes won per model.
-"""
 import os
 import numpy as np
 import pandas as pd
@@ -12,7 +8,6 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 from .plot_utils import MODEL_COLORS, save_figure
-
 
 def generate(df_singles_best, figures_dir, model_order=None, dataset_order=None):
     out_dir  = os.path.join(figures_dir, "f_dataset_champion")

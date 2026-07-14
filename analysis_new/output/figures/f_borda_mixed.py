@@ -1,10 +1,5 @@
-"""
-F_BORDA_MIXED: Total Borda score for all 16 competitors (RQ2).
+# F_BORDA_MIXED: Total Borda score for all 16 competitors (RQ2).
 
-Grouped bar chart: x = base_type (8 groups), 2 bars per group.
-Light bar = single, dark bar = best ensemble.
-Height = total Borda score (sum of SK ranks across all scenarios × 4 metrics; LOWER = better).
-"""
 import os
 import numpy as np
 import pandas as pd
@@ -15,7 +10,6 @@ import matplotlib.pyplot as plt
 from .plot_utils import MODEL_COLORS, save_figure
 
 METRICS_EVAL = ["MRE", "MAE", "MBRE", "MIBRE"]
-
 
 def generate(sk_mixed, figures_dir, model_order=None):
     out_dir    = os.path.join(figures_dir, "f_borda_mixed")

@@ -1,10 +1,5 @@
-"""
-F4: Win/Tie/Loss Stacked Bars (RQ2 and RQ3.3).
+# F4: Win/Tie/Loss Stacked Bars (RQ2 and RQ3.3).
 
-Horizontal stacked bars showing % scenarios where ensemble wins/ties/loses.
-Variant F4a: ensemble vs. single (one bar per (base_type, metric)).
-Variant F4b: rule pairwise (MEAN vs NN, IRWM vs NN, MEAN vs IRWM).
-"""
 import os
 import numpy as np
 import pandas as pd
@@ -18,12 +13,7 @@ WIN_COLOR  = "#2166ac"
 TIE_COLOR  = "#f7f7f7"
 LOSS_COLOR = "#d73027"
 
-
 def generate_f4a(wtl_df, figures_dir, model_order=None, metric="MRE"):
-    """
-    F4a: ensemble vs. single W/T/L stacked bars.
-    One bar per base_type, showing proportions for a chosen metric.
-    """
     out_dir = os.path.join(figures_dir, "f4")
     models  = model_order or sorted(wtl_df["base_type"].unique())
     sub     = wtl_df[wtl_df["metric"] == metric]
@@ -35,18 +25,12 @@ def generate_f4a(wtl_df, figures_dir, model_order=None, metric="MRE"):
     fig.tight_layout()
     save_figure(fig, os.path.join(out_dir, f"f4a_wtl_{metric.lower()}.pdf"))
 
-
 def generate_f4b(df_ens_rq33, figures_dir, model_order=None, metric="MRE"):
-    """
-    F4b: rule pairwise W/T/L stacked bars.
-    Pairs: MEAN vs NN, IRWM vs NN, MEAN vs IRWM.
-    """
     out_dir = os.path.join(figures_dir, "f4")
     models  = model_order or sorted(df_ens_rq33["base_type"].unique())
     pairs   = [("MEAN", "NN"), ("IRWM", "NN"), ("MEAN", "IRWM")]
     sub_m   = df_ens_rq33[df_ens_rq33["metric"] == metric]
 
-    # Build wtl rows
     rows = []
     for model in models:
         for (r1, r2) in pairs:
@@ -71,7 +55,6 @@ def generate_f4b(df_ens_rq33, figures_dir, model_order=None, metric="MRE"):
     for val_col, color, label in [("W", WIN_COLOR, "Win"), ("T", TIE_COLOR, "Tie"), ("L", LOSS_COLOR, "Loss")]:
         vals = (wtl[val_col] / n_total * 100).values
         ax.barh(range(len(rows)), vals, left=lefts, color=color, label=label, edgecolor="white")
-        # Annotate if large enough
         for i, (v, l) in enumerate(zip(vals, lefts)):
             if v > 5:
                 ax.text(l + v / 2, i, f"{v:.0f}%", ha="center", va="center", fontsize=6)
@@ -86,7 +69,6 @@ def generate_f4b(df_ens_rq33, figures_dir, model_order=None, metric="MRE"):
     ax.set_title(f"Rule pairwise W/T/L — {metric}")
     fig.tight_layout()
     save_figure(fig, os.path.join(out_dir, f"f4b_rule_wtl_{metric.lower()}.pdf"))
-
 
 def _draw_bars(ax, sub, models, group_col):
     w_vals = []; t_vals = []; l_vals = []

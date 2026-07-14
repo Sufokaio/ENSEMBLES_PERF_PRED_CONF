@@ -1,11 +1,5 @@
-"""
-F_RULE_VIOLIN: MRE distribution per combination rule (RQ3.3).
+# F_RULE_VIOLIN: MRE distribution per combination rule (RQ3.3).
 
-3 violins (MEAN / IRWM / NN).
-Each violin: distribution of median MRE across all
-(base_type, dataset, sample_size) scenarios for that rule.
-Jittered points overlaid for transparency.
-"""
 import os
 import numpy as np
 import pandas as pd
@@ -16,7 +10,6 @@ import matplotlib.pyplot as plt
 from .plot_utils import RULE_COLORS, save_figure
 
 RULES = ["MEAN", "IRWM", "NN"]
-
 
 def generate(df_ens_rq33, figures_dir):
     out_dir = os.path.join(figures_dir, "f_rule_violin")
@@ -45,7 +38,6 @@ def generate(df_ens_rq33, figures_dir):
         parts["cmins"].set_color([RULE_COLORS.get(r, "#333") for r in RULES])
         parts["cmaxes"].set_color([RULE_COLORS.get(r, "#333") for r in RULES])
 
-        # Jitter points
         jx = positions[i] + rng.uniform(-0.12, 0.12, size=len(data[i]))
         ax.scatter(jx, data[i], color=color, s=8, alpha=0.5, zorder=3)
 

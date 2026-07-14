@@ -1,11 +1,5 @@
-"""
-F_GAP_CLOSE: Heatmap of SK rank improvement from single to ensemble per dataset (RQ2).
+# F_GAP_CLOSE: Heatmap of SK rank improvement from single to ensemble per dataset (RQ2).
 
-Cell (base_type, dataset): mean(SK_rank_ensemble) - mean(SK_rank_single) across
-sample sizes, using MRE in the MIXED ranking.
-Negative (green) = ensemble moved to a better rank cluster.
-Positive (red) = ensemble regressed.
-"""
 import os
 import numpy as np
 import pandas as pd
@@ -14,7 +8,6 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 from .plot_utils import save_figure, ds_label
-
 
 def generate(sk_mixed, figures_dir, model_order=None, dataset_order=None):
     out_dir    = os.path.join(figures_dir, "f_gap_close")

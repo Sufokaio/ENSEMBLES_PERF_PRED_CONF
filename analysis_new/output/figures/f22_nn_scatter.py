@@ -1,22 +1,5 @@
-"""
-F22: NN vs. MEAN Scatter — Direct Evidence for R2-4 (RQ3.3).
+# F22: NN vs. MEAN Scatter — Direct Evidence for R2-4 (RQ3.3).
 
-Per (base_type, dataset, sample_size): median MRE for NN (y-axis) vs MEAN (x-axis).
-Points ABOVE the diagonal → NN has higher error → NN loses.
-Points BELOW the diagonal → NN has lower error  → NN wins.
-Color = base_type.
-
-Side annotation: % of scenarios above/below diagonal.
-
-This is the direct visual evidence for the reviewer request R2-4
-("explain WHY MEAN/IRWM beat NN").
-If nearly all points are above the diagonal, it is a universal failure,
-not an artefact.  If DL base types are more symmetric, that hints at
-a data-size or combiner-fitting interaction.
-
-Also produces a second version with IRWM vs MEAN to check whether
-the two parameter-free rules are truly interchangeable.
-"""
 import os
 import numpy as np
 import pandas as pd
@@ -26,21 +9,11 @@ import matplotlib.pyplot as plt
 
 from .plot_utils import MODEL_COLORS, save_figure
 
-
 def generate(df_ens_rq33, figures_dir, model_order=None):
-    """
-    Aggregated scatter: one point per (base_type, dataset) — ~64 points instead of
-    ~1200 per-run points. Aggregates across sample_sizes and runs by median.
-
-    Parameters
-    ----------
-    df_ens_rq33 : best-k-per-rule ensemble DataFrame
-    """
     out_dir = os.path.join(figures_dir, "f22")
     models  = model_order or sorted(df_ens_rq33["base_type"].unique())
 
     sub = df_ens_rq33[df_ens_rq33["metric"] == "MRE"]
-    # Aggregate to (base_type, dataset) level: median across sample_sizes × runs
     central = (
         sub.groupby(["base_type", "dataset", "rule"])["value"]
         .median().reset_index()
@@ -53,11 +26,9 @@ def generate(df_ens_rq33, figures_dir, model_order=None):
     ]:
         _scatter(central, models, rule_a, rule_b, tag, out_dir)
 
-
 def _scatter(central, models, rule_a, rule_b, tag, out_dir):
     ra = central[central["rule"] == rule_a].rename(columns={"value": f"MRE_{rule_a}"})
     rb = central[central["rule"] == rule_b].rename(columns={"value": f"MRE_{rule_b}"})
-    # Merge on (base_type, dataset) — no sample_size since already aggregated
     merge_cols = [c for c in ["base_type", "dataset", "sample_size"] if c in ra.columns and c in rb.columns]
     merged = ra.merge(rb, on=merge_cols)
 

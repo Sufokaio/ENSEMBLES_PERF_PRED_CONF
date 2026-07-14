@@ -1,10 +1,4 @@
-#!/usr/bin/env python3
-"""
-view_tables.py — render LaTeX tabular fragments as HTML and open in browser.
-
-Run:  python journal-repo/analysis_new/view_tables.py
-      (or open the script from analysis_new/ directly)
-"""
+# Renders LaTeX tabular fragments as HTML and opens them in a browser.
 
 import re
 import webbrowser
@@ -13,20 +7,14 @@ from pathlib import Path
 
 LATEX_DIR = Path(__file__).parent / "output_artifacts" / "latex"
 
-
-# ── LaTeX → HTML text ────────────────────────────────────────────────────────
-
 def texify(s: str) -> str:
-    """Convert LaTeX inline markup to HTML with proper brace-depth handling."""
     result = []
     i = 0
     while i < len(s):
-        # \textbf{...}
         if s[i:i+8] == r"\textbf{":
             content, end = _extract_braced(s, i + 7)
             result.append(f"<strong>{texify(content)}</strong>")
             i = end
-        # \emph{...}
         elif s[i:i+6] == r"\emph{":
             content, end = _extract_braced(s, i + 5)
             result.append(f"<em>{texify(content)}</em>")
@@ -37,7 +25,6 @@ def texify(s: str) -> str:
 
     s = "".join(result)
 
-    # Math mode $...$
     def _math(m):
         t = m.group(1)
         t = re.sub(r"\^\\dagger", "<sup>†</sup>", t)
@@ -45,25 +32,21 @@ def texify(s: str) -> str:
         t = re.sub(r"\^(\w)", r"<sup>\1</sup>", t)
         t = re.sub(r"_\{([^}]+)\}", r"<sub>\1</sub>", t)
         t = re.sub(r"_(\w)", r"<sub>\1</sub>", t)
-        t = re.sub(r"\\[a-zA-Z]+", "", t)   # strip remaining commands
+        t = re.sub(r"\\[a-zA-Z]+", "", t)
         return t
 
     s = re.sub(r"\$([^$]+)\$", _math, s)
 
-    # Strip leftover formatting commands
     s = re.sub(r"\\(?:footnotesize|small|normalsize|large|centering)\s*", "", s)
 
-    # Special chars / dashes
     s = s.replace(r"\%", "%")
     s = s.replace(r"\&", "&amp;")
     s = s.replace(r"\#", "#")
-    s = s.replace("--", "–")   # en-dash
+    s = s.replace("--", "–")
 
     return s.strip()
 
-
 def _extract_braced(s: str, open_pos: int):
-    """Return (content, index_after_closing_brace) for the {...} starting at open_pos."""
     assert s[open_pos] == "{"
     depth = 0
     k = open_pos
@@ -77,11 +60,7 @@ def _extract_braced(s: str, open_pos: int):
         k += 1
     return s[open_pos + 1 :], len(s)
 
-
-# ── Cell splitting / rendering ───────────────────────────────────────────────
-
 def _split_cells(row: str):
-    """Split on & but not inside braces."""
     cells, current, depth = [], [], 0
     for ch in row:
         if ch == "{":
@@ -99,7 +78,6 @@ def _split_cells(row: str):
         cells.append("".join(current))
     return cells
 
-
 def _render_cell(cell: str) -> str:
     cell = cell.strip()
     mc = re.match(
@@ -113,14 +91,11 @@ def _render_cell(cell: str) -> str:
         return f'<td colspan="{colspan}" style="text-align:{align_css};font-size:11px">{text}</td>'
     return f"<td>{texify(cell)}</td>"
 
-
-# ── Tabular parser ───────────────────────────────────────────────────────────
-
 def parse_tabular(tex: str) -> str:
     tex = re.sub(r"\\begin\{tabular\}\*?\{[^}]+\}", "", tex)
     tex = re.sub(r"\\end\{tabular\}", "", tex)
 
-    items = []   # list of {raw, top, bot}
+    items = []
 
     for raw in re.split(r"\\\\", tex):
         raw = raw.strip()
@@ -146,7 +121,6 @@ def parse_tabular(tex: str) -> str:
         raw = re.sub(r"\\hline\b", "", raw).strip()
 
         if raw:
-            # \bottomrule before content → separator belongs to the previous row
             if bot_border and items:
                 items[-1]["bot"] = bot_border
                 bot_border = None
@@ -166,9 +140,6 @@ def parse_tabular(tex: str) -> str:
         rows_html.append(f"  <tr{tr_style}>{cells}</tr>")
 
     return '<table class="lt">\n' + "\n".join(rows_html) + "\n</table>"
-
-
-# ── HTML page ────────────────────────────────────────────────────────────────
 
 _CSS = """
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -223,7 +194,6 @@ const observer = new IntersectionObserver(entries => {
 document.querySelectorAll('.section').forEach(s => observer.observe(s));
 """
 
-
 def _build_page(tables: dict) -> str:
     nav = "\n  ".join(
         f'<a href="#{_id(k)}">{k}</a>' for k in tables
@@ -249,12 +219,8 @@ def _build_page(tables: dict) -> str:
 </body>
 </html>"""
 
-
 def _id(key: str) -> str:
     return re.sub(r"[^a-zA-Z0-9_-]", "_", key)
-
-
-# ── Entry point ──────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     if not LATEX_DIR.exists():

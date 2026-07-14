@@ -1,11 +1,5 @@
-"""
-T_SK_COUNT: Scott-Knott cluster membership counts (RQ1).
+# T_SK_COUNT: Scott-Knott cluster membership counts (RQ1).
 
-Three variants:
-  A — count of scenarios where model is in best cluster (sk_rank == 1)
-  B — count of scenarios where model is in top-2 clusters (sk_rank <= 2)
-  C — full distribution: count per cluster rank
-"""
 import os
 import numpy as np
 import pandas as pd
@@ -13,7 +7,6 @@ import pandas as pd
 from output.utils import bold, save_tex
 
 METRICS_EVAL = ["MRE", "MAE", "MBRE", "MIBRE"]
-
 
 def generate(sk_singles, latex_dir, model_order=None):
     out_dir = os.path.join(latex_dir, "t_sk_count")
@@ -24,9 +17,7 @@ def generate(sk_singles, latex_dir, model_order=None):
     _variant_b(sk_singles, models, N, out_dir)
     _variant_c(sk_singles, models, N, out_dir)
 
-
 def _variant_a(sk, models, N, out_dir):
-    """Count of scenarios in best cluster (rank == 1) per model × metric."""
     lines = [
         r"\begin{tabular}{l" + "c" * len(METRICS_EVAL) + "}",
         r"\toprule",
@@ -55,9 +46,7 @@ def _variant_a(sk, models, N, out_dir):
     ]
     save_tex(lines, os.path.join(out_dir, "tsk_count_best.tex"))
 
-
 def _variant_b(sk, models, N, out_dir):
-    """Count of scenarios in top-2 clusters (rank <= 2) per model × metric."""
     lines = [
         r"\begin{tabular}{l" + "c" * len(METRICS_EVAL) + "}",
         r"\toprule",
@@ -86,13 +75,10 @@ def _variant_b(sk, models, N, out_dir):
     ]
     save_tex(lines, os.path.join(out_dir, "tsk_count_top2.tex"))
 
-
 def _variant_c(sk, models, N, out_dir):
-    """Full rank distribution: counts per cluster per model × metric."""
     max_rank = int(sk["sk_rank"].max())
     rank_labels = [f"R{r}" for r in range(1, max_rank + 1)]
 
-    # One sub-table per metric (too wide for all metrics together)
     for metric in METRICS_EVAL:
         sub = sk[sk["metric"] == metric]
         col_spec = "l" + "r" * max_rank

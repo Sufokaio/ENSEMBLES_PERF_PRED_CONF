@@ -1,17 +1,5 @@
-"""
-T6: SK Group Evolution Across Metrics (RQ1 / C2).
+# T6: SK Group Evolution Across Metrics (RQ1 / C2).
 
-Rows = model_type.  Columns = MRE | MAE | MBRE | MIBRE.
-Cell = mean SK group averaged across all (dataset, sample_size) scenarios.
-A dagger (†) marks any model whose mean SK group on a non-MRE metric deviates
-by more than 0.5 from its MRE group — i.e., the metric changes the grouping.
-
-This is the strongest single-table evidence for contribution C2:
-"the protocol changes the conclusions you'd draw."
-The more daggers, the stronger the case that MRE-only evaluation is unreliable.
-
-Bold = best (lowest mean SK group = rank 1 cluster) per column.
-"""
 import os
 import numpy as np
 import pandas as pd
@@ -20,18 +8,10 @@ from output.utils import bold, save_tex
 
 METRICS_EVAL = ["MRE", "MAE", "MBRE", "MIBRE"]
 
-
 def generate(sk_singles, latex_dir, model_order=None):
-    """
-    Parameters
-    ----------
-    sk_singles : [dataset, sample_size, metric, model_type, sk_rank]
-    latex_dir  : root latex output directory
-    """
     out_dir = os.path.join(latex_dir, "t6")
     models  = model_order or sorted(sk_singles["model_type"].unique())
 
-    # Mean SK group per (model, metric) across all (dataset, sample_size)
     mean_sk = (
         sk_singles[sk_singles["metric"].isin(METRICS_EVAL)]
         .groupby(["model_type", "metric"])["sk_rank"]

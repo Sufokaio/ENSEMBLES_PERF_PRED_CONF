@@ -1,11 +1,5 @@
-"""
-F_RANK_FLIP_HEATMAP: Metric rank-flip rate per dataset (RQ1 / Contribution 2).
+# F_RANK_FLIP_HEATMAP: Metric rank-flip rate per dataset (RQ1 / Contribution 2).
 
-Rows = 6 metric pairs (MRE-MAE, MRE-MBRE, ...).  Cols = 8 datasets.
-Cell = % of (sample_size x model_pairs) where two metrics disagree on relative order.
-
-Darkest cells = that dataset + metric pair drives the most disagreement.
-"""
 import os
 import itertools
 import numpy as np
@@ -18,7 +12,6 @@ from .plot_utils import save_figure
 
 METRICS = ["MRE", "MAE", "MBRE", "MIBRE"]
 PAIRS   = list(itertools.combinations(METRICS, 2))
-
 
 def generate(df_singles_best, figures_dir, dataset_order=None):
     out_dir  = os.path.join(figures_dir, "f_rank_flip_heatmap")

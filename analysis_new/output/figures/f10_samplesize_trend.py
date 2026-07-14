@@ -1,12 +1,5 @@
-"""
-F10: Performance by Sample Size (RQ1 / RQ2).
+# F10: Performance by Sample Size (RQ1 / RQ2).
 
-Two panels: left = singles MRE, right = best ensembles MRE.
-x = sample size tier S1–S5 (rank within each dataset, 1=smallest).
-y = aggregated MRE across all 8 datasets and 30 runs.
-
-Two variants: median aggregation and mean aggregation.
-"""
 import os
 import numpy as np
 import pandas as pd
@@ -16,7 +9,6 @@ import matplotlib.pyplot as plt
 
 from .plot_utils import MODEL_COLORS, save_figure
 
-
 def _add_sample_rank(df, model_col):
     df = df.copy()
     sizes = (
@@ -25,7 +17,6 @@ def _add_sample_rank(df, model_col):
     )
     sizes["sample_rank"] = sizes.groupby("dataset").cumcount() + 1
     return df.merge(sizes, on=["dataset", "sample_size"])
-
 
 def _make_figure(df_singles_best, df_ens_best_rq2, models, agg_fn, agg_label):
     sub_s = df_singles_best[df_singles_best["metric"] == "MRE"]
@@ -64,7 +55,6 @@ def _make_figure(df_singles_best, df_ens_best_rq2, models, agg_fn, agg_label):
     fig.suptitle(f"MRE vs. training set size tier ({agg_label}) — singles and best ensembles")
     fig.tight_layout()
     return fig
-
 
 def generate(df_singles_best, df_ens_best_rq2, figures_dir, model_order=None):
     out_dir = os.path.join(figures_dir, "f10")

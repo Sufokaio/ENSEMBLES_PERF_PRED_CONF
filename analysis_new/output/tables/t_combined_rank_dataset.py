@@ -1,21 +1,10 @@
-"""
-T_COMBINED_RANK_DATASET: Per-dataset breakdown of the mixed 16-competitor SK ranking (RQ2).
+# T_COMBINED_RANK_DATASET: Per-dataset breakdown of the mixed 16-competitor SK ranking (RQ2).
 
-16 rows (sorted by overall mean SK rank on MRE, singles then ensembles).
-Columns: competitor | ds_1 | ds_2 | ... | ds_8 | Overall
-
-Cell (competitor, dataset) = mean SK rank across the 5 sample sizes for that dataset,
-in the mixed 16-competitor ranking, on MRE.
-
-Last column = mean across all 40 scenarios (= t_combined_rank MRE column).
-Bold = best in column. Midrule separates singles from ensembles.
-"""
 import os
 import numpy as np
 import pandas as pd
 
 from output.utils import bold, save_tex
-
 
 def generate(sk_mixed, latex_dir, model_order=None, dataset_order=None):
     out_dir = os.path.join(latex_dir, "t_combined_rank_dataset")
@@ -24,7 +13,6 @@ def generate(sk_mixed, latex_dir, model_order=None, dataset_order=None):
 
     datasets = dataset_order or sorted(sub["dataset"].unique())
 
-    # Mean SK rank per (competitor, dataset) across 5 sample sizes
     per_ds = (
         sub.groupby(["competitor", "dataset"])["sk_rank"]
         .mean().unstack("dataset")
@@ -32,15 +20,12 @@ def generate(sk_mixed, latex_dir, model_order=None, dataset_order=None):
     )
     per_ds["Overall"] = sub.groupby("competitor")["sk_rank"].mean()
 
-    # Sort by overall mean
     per_ds = per_ds.sort_values("Overall")
     competitors_sorted = per_ds.index.tolist()
 
-    # Best value per column
     all_cols = datasets + ["Overall"]
     best = {c: per_ds[c].min() for c in all_cols}
 
-    # Short dataset names (truncate to 8 chars to fit)
     short_ds = [d[:8] for d in datasets]
 
     col_spec = "l" + "c" * len(all_cols)

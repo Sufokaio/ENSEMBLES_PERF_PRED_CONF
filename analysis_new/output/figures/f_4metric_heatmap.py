@@ -1,10 +1,5 @@
-"""
-F_4METRIC_HEATMAP: 2x2 grid of models x datasets heatmaps, one panel per metric (RQ1).
+# F_4METRIC_HEATMAP: 2x2 grid of models x datasets heatmaps, one panel per metric (RQ1).
 
-Each panel: rows = models, cols = datasets (sorted easy→hard by MRE).
-Cell = median value of that metric across all sample sizes and runs.
-Read across panels to see where rankings shift between metrics.
-"""
 import os
 import numpy as np
 import matplotlib
@@ -15,12 +10,10 @@ from .plot_utils import save_figure
 
 METRICS = ["MRE", "MAE", "MBRE", "MIBRE"]
 
-
 def generate(df_singles_best, figures_dir, model_order=None, dataset_order=None):
     out_dir = os.path.join(figures_dir, "f_4metric_heatmap")
     models  = model_order or sorted(df_singles_best["model_type"].unique())
 
-    # difficulty order from MRE
     sub_mre  = df_singles_best[df_singles_best["metric"] == "MRE"]
     piv_mre  = sub_mre.groupby(["model_type", "dataset"])["value"].median().unstack("dataset")
     ds_order = dataset_order or piv_mre.min(axis=0).sort_values().index.tolist()

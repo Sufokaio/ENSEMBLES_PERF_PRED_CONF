@@ -1,10 +1,5 @@
-"""
-T3: Best-Ensemble vs. Single Comparison (RQ2 primary).
+# T3: Best-Ensemble vs. Single Comparison (RQ2 primary).
 
-8 rows (base model types) × 5 metric groups (MRE, MAE, MBRE, MIBRE, SA).
-Per group: W/T/L | win-rate [95% CI] | imp%
-Two variants: mean-based and median-based.
-"""
 import os
 import numpy as np
 import pandas as pd
@@ -13,22 +8,12 @@ from output.utils import bold, save_tex
 
 METRICS_DISPLAY = ["MRE", "MAE", "MBRE", "MIBRE", "SA"]
 
-
 def generate(wtl_df, latex_dir, model_order=None, agg_label="mean"):
-    """
-    Parameters
-    ----------
-    wtl_df    : output of comparisons.compute_wtl() for one agg variant
-                [base_type, metric, W, T, L, N, imp_pct_mean, win_rate, win_rate_lo, win_rate_hi]
-    agg_label : "mean" or "median" — used only for output filenames
-    """
     out_dir = os.path.join(latex_dir, "t3")
     models  = model_order or sorted(wtl_df["base_type"].unique())
     _one_variant(wtl_df, models, agg_label, out_dir)
 
-
 def _one_variant(df, models, agg_label, out_dir):
-    # Metric group header spans 4 cols: W | T | L | imp%
     metric_headers = " & ".join(
         rf"\multicolumn{{4}}{{c}}{{{m}}}" for m in METRICS_DISPLAY
     )
@@ -61,12 +46,9 @@ def _one_variant(df, models, agg_label, out_dir):
     fname = f"t3_wtl_{agg_label}.tex"
     save_tex(lines, os.path.join(out_dir, fname))
 
-    # Also write a compact version with win-rate + CI
     _one_variant_winrate(df, models, agg_label, out_dir)
 
-
 def _one_variant_winrate(df, models, agg_label, out_dir):
-    """Compact format: win% [CI] (imp%) — one column per metric."""
     col_spec = "l" + "c" * len(METRICS_DISPLAY)
     metric_headers = " & ".join(METRICS_DISPLAY)
 
@@ -96,17 +78,7 @@ def _one_variant_winrate(df, models, agg_label, out_dir):
     fname = f"t3_winrate_{agg_label}.tex"
     save_tex(lines, os.path.join(out_dir, fname))
 
-
 def generate_sk_diff(sk_mixed, latex_dir, model_order=None):
-    """
-    T3 SK-rank-difference variant.
-
-    For each (base_type, metric): mean_SK_rank(ensemble) - mean_SK_rank(single)
-    when singles and ensembles are ranked TOGETHER in the mixed SK analysis.
-    Negative = ensemble improved its cluster standing vs the single.
-
-    Output: t3_sk_rank_diff.tex
-    """
     import numpy as np
 
     METRICS_EVAL = ["MRE", "MAE", "MBRE", "MIBRE"]

@@ -1,3 +1,5 @@
+# Paths and shared constants (models, metrics, rules, SK critical values) for the analysis pipeline.
+
 import os
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
@@ -13,7 +15,6 @@ METRICS     = ["MRE", "MAE", "MBRE", "MIBRE"]
 RULES       = ["MEAN", "IRWM", "NN"]
 K_RANGE     = list(range(2, 11))
 
-# File suffix for each combination rule in ensemble filenames
 RULE_FILE_SUFFIX = {"MEAN": "", "IRWM": "_irwm", "NN": "_nn"}
 
 MODEL_COLORS = {
@@ -27,7 +28,6 @@ MODEL_COLORS = {
     "HINNPerf": "#7f7f7f",
 }
 
-# Nemenyi q_{alpha=0.05} critical values (Demsar 2006, Table 5) keyed by # of classifiers
 NEMENYI_Q = {
     2: 1.960, 3: 2.344, 4: 2.569, 5: 2.728,
     6: 2.850, 7: 2.949, 8: 3.031, 9: 3.102, 10: 3.164,

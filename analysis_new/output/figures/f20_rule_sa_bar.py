@@ -1,19 +1,5 @@
-"""
-F20: SA by Combination Rule (RQ3.3 / C2).
+# F20: SA by Combination Rule (RQ3.3 / C2).
 
-Grouped bar chart.
-x-groups = 8 base model types.  3 bars per group: MEAN / IRWM / NN.
-y = mean SA.  Error bars = SD across all (dataset, sample_size) scenarios.
-
-Reference lines:
-  SA = 0   → random baseline (red solid)
-  SA_5 ref → mean SA of a 5-learner random baseline (gray dashed)
-
-This plot answers: does the MEAN/IRWM superiority over NN hold
-when evaluated against the random baseline, not just against each other?
-It also directly implicates SA as a decision criterion — if all three
-rules are above SA=0 but the gaps change, the relative ranking is metric-sensitive.
-"""
 import os
 import numpy as np
 import pandas as pd
@@ -26,14 +12,7 @@ from aggregators.comparisons import add_ensemble_sa_d
 
 RULES = ["MEAN", "IRWM", "NN"]
 
-
 def generate(df_ens_rq33, df_baseline, figures_dir, model_order=None):
-    """
-    Parameters
-    ----------
-    df_ens_rq33 : best-k-per-rule ensemble DataFrame
-    df_baseline : [dataset, sample_size, MAEp0, Sp0, SA_5]
-    """
     out_dir = os.path.join(figures_dir, "f20")
     models  = model_order or sorted(df_ens_rq33["base_type"].unique())
 

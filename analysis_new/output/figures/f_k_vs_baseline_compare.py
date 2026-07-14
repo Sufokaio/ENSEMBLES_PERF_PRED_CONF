@@ -1,16 +1,5 @@
-"""
-F_K_VS_BASELINE_COMPARE: side-by-side heatmap comparing global (216) vs per-rule (72)
-SK competition for the "% scenarios where k beats k=2" metric (RQ3.2).
+# F_K_VS_BASELINE_COMPARE: side-by-side heatmap comparing global (216) vs per-rule (72) SK competition (RQ3.2).
 
-Layout: 2 rows x 3 columns
-  Row 1 (top)    — global competition (all 216 ensembles)
-  Row 2 (bottom) — per-rule competition (72 = 8 base_types x 9 k per rule)
-  Columns        — MEAN | IRWM | NN
-
-Each panel: rows = 8 base types, columns = k=3..10.
-Color = % of 40 scenarios where k is in a statistically better SK group than k=2.
-Shared color scale across all 6 panels.
-"""
 import os
 import numpy as np
 import matplotlib
@@ -23,14 +12,11 @@ from .plot_utils import save_figure
 RULES      = ["MEAN", "IRWM", "NN"]
 K_COMPARE  = list(range(3, 11))
 
-
 def _s1_filter(df):
     min_ss = df.groupby("dataset")["sample_size"].transform("min")
     return df[df["sample_size"] == min_ss]
 
-
 def _pct_better_mat(k_sk_ranks, base_types, ks_compare, rule):
-    """8 x len(ks_compare) matrix: % scenarios where k beats k=2 in SK."""
     sub = k_sk_ranks[k_sk_ranks["rule"] == rule]
     mat = np.full((len(base_types), len(ks_compare)), np.nan)
 
@@ -49,7 +35,6 @@ def _pct_better_mat(k_sk_ranks, base_types, ks_compare, rule):
                 mat[i, j] = 0.0
             mat[i, j] += (1 if rk < r2 else 0)
 
-    # Convert counts to percentages
     n_scenarios = sub.groupby("base_type")[["dataset", "sample_size"]].apply(
         lambda g: g.drop_duplicates().shape[0]
     ).to_dict()
@@ -61,9 +46,7 @@ def _pct_better_mat(k_sk_ranks, base_types, ks_compare, rule):
 
     return mat
 
-
 def generate(k_sk_global, k_sk_perrule, figures_dir, model_order=None):
-    """Side-by-side comparison: global (216) vs per-rule (72)."""
     out_dir    = os.path.join(figures_dir, "f_k_vs_baseline_compare")
     base_types = model_order or sorted(k_sk_global["base_type"].unique())
 
@@ -71,9 +54,7 @@ def generate(k_sk_global, k_sk_perrule, figures_dir, model_order=None):
           out_dir, "f_k_vs_baseline_compare_all.pdf",
           n_scenarios=40)
 
-
 def generate_s1(k_sk_global, k_sk_perrule, figures_dir, model_order=None):
-    """S1 variant."""
     out_dir    = os.path.join(figures_dir, "f_k_vs_baseline_compare")
     base_types = model_order or sorted(k_sk_global["base_type"].unique())
     g_s1 = _s1_filter(k_sk_global)
@@ -83,7 +64,6 @@ def generate_s1(k_sk_global, k_sk_perrule, figures_dir, model_order=None):
           out_dir, "f_k_vs_baseline_compare_s1.pdf",
           n_scenarios=8)
 
-
 def _draw(k_sk_global, k_sk_perrule, base_types, ks_compare,
           out_dir, fname, n_scenarios):
     datasets = [
@@ -91,7 +71,6 @@ def _draw(k_sk_global, k_sk_perrule, base_types, ks_compare,
         (k_sk_perrule, f"Per-rule competition (72 per rule)"),
     ]
 
-    # Build all 6 matrices and find shared vmax
     mats = {}
     for row_idx, (data, _) in enumerate(datasets):
         for rule in RULES:

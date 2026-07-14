@@ -1,12 +1,5 @@
-"""
-F_RQ33_RULE_MRE_HEATMAP: 8x3 heatmap of mean MRE per (base_type, rule) — RQ3.3.
+# F_RQ33_RULE_MRE_HEATMAP: 8x3 heatmap of mean MRE per (base_type, rule) — RQ3.3.
 
-Same layout as f_rq33_rule_rank_heatmap but y = mean MRE (raw error, lower = better).
-Each rule uses its per-scenario best k (from ensembles_best_rq33).
-Values averaged across all 40 evaluation scenarios.
-
-Input: ensembles_best_rq33 DataFrame (long format, metric column includes MRE)
-"""
 import os
 import numpy as np
 import matplotlib
@@ -17,11 +10,9 @@ from .plot_utils import save_figure
 
 RULES = ["MEAN", "IRWM", "NN"]
 
-
 def _s1_filter(df):
     min_ss = df.groupby("dataset")["sample_size"].transform("min")
     return df[df["sample_size"] == min_ss]
-
 
 def _build_mat(df_mre, base_types):
     mean_mre = (df_mre
@@ -35,7 +26,6 @@ def _build_mat(df_mre, base_types):
             if not val.empty:
                 mat[i, j] = val.values[0]
     return mat
-
 
 def _draw(mat, base_types, out_dir, fname, title):
     vmin = np.nanmin(mat)
@@ -66,7 +56,6 @@ def _draw(mat, base_types, out_dir, fname, title):
     fig.tight_layout()
     save_figure(fig, os.path.join(out_dir, fname))
 
-
 def generate(df_ens_best_rq33, figures_dir, model_order=None):
     out_dir    = os.path.join(figures_dir, "f_rq33_rule_mre_heatmap")
     df_mre     = df_ens_best_rq33[df_ens_best_rq33["metric"] == "MRE"]
@@ -75,7 +64,6 @@ def generate(df_ens_best_rq33, figures_dir, model_order=None):
     _draw(mat, base_types, out_dir,
           "f_rq33_rule_mre_heatmap_all.pdf",
           "Mean MRE per (base type, rule) — best $k$ per scenario, 40 scenarios (RQ3.3)")
-
 
 def generate_s1(df_ens_best_rq33, figures_dir, model_order=None):
     out_dir    = os.path.join(figures_dir, "f_rq33_rule_mre_heatmap")

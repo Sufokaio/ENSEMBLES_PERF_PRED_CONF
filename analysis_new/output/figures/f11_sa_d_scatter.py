@@ -1,19 +1,5 @@
-"""
-F11: SA / Δ Scatter — Single Models (RQ1 / C2).
+# F11: SA / Δ Scatter — Single Models (RQ1 / C2).
 
-One point per (model_type, dataset, sample_size) triple (40 points per model type).
-x = mean SA (Standardized Accuracy, higher = better).
-y = mean Δ (effect size vs random, more negative = better).
-Color = model type.
-
-Reference lines:
-  SA = 0 (vertical red)  → no better than random on SA
-  Δ  = 0 (horizontal gray) → no better than random on Δ
-
-All interesting models land in the top-left quadrant (SA > 0, Δ < 0).
-Models in the top-right or bottom-left show metric inconsistency.
-This figure is direct evidence that SA pulls its weight as a distinct criterion.
-"""
 import os
 import numpy as np
 import pandas as pd
@@ -23,17 +9,10 @@ import matplotlib.pyplot as plt
 
 from .plot_utils import MODEL_COLORS, save_figure
 
-
 def generate(df_singles_best, figures_dir, model_order=None):
-    """
-    Parameters
-    ----------
-    df_singles_best : best-variant singles long-format (must include metric SA and D)
-    """
     out_dir = os.path.join(figures_dir, "f11")
     models  = model_order or sorted(df_singles_best["model_type"].unique())
 
-    # Per (model, dataset, sample_size): mean SA and mean D across 30 runs
     sa_agg = (
         df_singles_best[df_singles_best["metric"] == "SA"]
         .groupby(["model_type", "dataset", "sample_size"])["value"]
@@ -57,7 +36,6 @@ def generate(df_singles_best, figures_dir, model_order=None):
     ax.axvline(0, color="red",  linewidth=1.0, linestyle="-",  alpha=0.8, label="SA = 0")
     ax.axhline(0, color="gray", linewidth=0.8, linestyle="--", alpha=0.7, label="Δ = 0")
 
-    # Quadrant labels
     ax.text(0.02, 0.98,
             "SA > 0, Δ < 0\n(better than random)",
             transform=ax.transAxes, fontsize=6.5, va="top", color="#2ca02c",

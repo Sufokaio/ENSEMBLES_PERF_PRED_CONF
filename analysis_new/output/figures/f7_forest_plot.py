@@ -1,10 +1,5 @@
-"""
-F7: Effect Size Forest Plot — Δ (D) per model (C2 / C4).
+# F7: Effect Size Forest Plot — Δ (D) per model (C2 / C4).
 
-One point per model type: mean D aggregated across all (dataset, sample_size).
-Error bars = SD across (dataset, sample_size) means.
-Reference line at D=0.
-"""
 import os
 import numpy as np
 import pandas as pd
@@ -14,19 +9,12 @@ import matplotlib.pyplot as plt
 
 from .plot_utils import MODEL_COLORS, save_figure
 
-
 def generate(df_singles_best, figures_dir, model_order=None):
-    """
-    Parameters
-    ----------
-    df_singles_best : best-variant singles, must include metric="D" rows
-    """
     out_dir = os.path.join(figures_dir, "f7")
     models  = model_order or sorted(df_singles_best["model_type"].unique())
 
     sub = df_singles_best[df_singles_best["metric"] == "D"]
 
-    # Per (model, dataset, sample_size): mean D over 30 runs
     per_scenario = (
         sub.groupby(["model_type", "dataset", "sample_size"])["value"]
         .mean()
@@ -34,7 +22,6 @@ def generate(df_singles_best, figures_dir, model_order=None):
         .rename(columns={"value": "mean_D"})
     )
 
-    # Per model: mean and SD across scenarios
     agg = (
         per_scenario.groupby("model_type")["mean_D"]
         .agg(["mean", "std"])

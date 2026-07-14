@@ -1,14 +1,5 @@
-"""
-F_RQ33_WINNER_MAP: Per-dataset winning rule matrix (RQ3.3).
+# F_RQ33_WINNER_MAP: Per-dataset winning rule matrix (RQ3.3).
 
-Rows = base_types (8), columns = datasets (8).
-Cell color = which rule wins most often across sample sizes for that (base_type, dataset).
-Winning rule = rule with lowest mean MRE at best-k-per-scenario.
-
-Supports claim: "rule preference is universal / model-dependent / dataset-dependent."
-
-Input: ensembles_best_rq33 DataFrame (long-format, metric MRE already selected-best-k)
-"""
 import os
 import numpy as np
 import pandas as pd
@@ -22,18 +13,11 @@ from .plot_utils import save_figure
 RULES       = ["MEAN", "IRWM", "NN"]
 RULE_COLORS = {"MEAN": "#4878CF", "IRWM": "#6ACC65", "NN": "#D65F5F"}
 
-
 def _s1_filter(df):
     min_ss = df.groupby("dataset")["sample_size"].transform("min")
     return df[df["sample_size"] == min_ss]
 
-
 def _winning_rule(df_mre, base_types, datasets):
-    """
-    For each (base_type, dataset): which rule has the lowest mean MRE
-    (averaged across sample sizes)?
-    Returns 2-D array of rule strings and numeric matrix for color mapping.
-    """
     agg = (df_mre
            .groupby(["base_type", "dataset", "rule"])["value"]
            .mean()
@@ -53,7 +37,6 @@ def _winning_rule(df_mre, base_types, datasets):
             color_mat[i, j] = rule_idx[winner]
 
     return rule_mat, color_mat
-
 
 def _draw(rule_mat, color_mat, base_types, datasets, out_dir, fname, title):
     cmap   = matplotlib.colors.ListedColormap([RULE_COLORS[r] for r in RULES])
@@ -85,9 +68,7 @@ def _draw(rule_mat, color_mat, base_types, datasets, out_dir, fname, title):
     fig.tight_layout()
     save_figure(fig, os.path.join(out_dir, fname))
 
-
 def _winning_rule_sk(sk_rq33, base_types, datasets):
-    """Winner = rule with lowest mean SK rank per (base_type, dataset)."""
     agg = (sk_rq33
            .groupby(["base_type", "dataset", "rule"])["sk_rank"]
            .mean()
@@ -108,7 +89,6 @@ def _winning_rule_sk(sk_rq33, base_types, datasets):
 
     return rule_mat, color_mat
 
-
 def generate(df_ens_best_rq33, figures_dir, model_order=None):
     out_dir    = os.path.join(figures_dir, "f_rq33_winner_map")
     df_mre     = df_ens_best_rq33[df_ens_best_rq33["metric"] == "MRE"]
@@ -119,7 +99,6 @@ def generate(df_ens_best_rq33, figures_dir, model_order=None):
     _draw(rule_mat, color_mat, base_types, datasets, out_dir,
           "f_rq33_winner_map_all.pdf",
           "Winning rule per (base type, dataset) — mean MRE, best $k$ per scenario (RQ3.3)")
-
 
 def generate_s1(df_ens_best_rq33, figures_dir, model_order=None):
     out_dir    = os.path.join(figures_dir, "f_rq33_winner_map")
@@ -133,9 +112,7 @@ def generate_s1(df_ens_best_rq33, figures_dir, model_order=None):
           "f_rq33_winner_map_s1.pdf",
           "Winning rule per (base type, dataset) — mean MRE, S1 (RQ3.3)")
 
-
 def generate_sk(sk_rq33, figures_dir, model_order=None):
-    """SK rank variant — winner = rule with lowest mean SK rank."""
     out_dir    = os.path.join(figures_dir, "f_rq33_winner_map")
     base_types = model_order or sorted(sk_rq33["base_type"].unique())
     datasets   = sorted(sk_rq33["dataset"].unique())
@@ -144,7 +121,6 @@ def generate_sk(sk_rq33, figures_dir, model_order=None):
     _draw(rule_mat, color_mat, base_types, datasets, out_dir,
           "f_rq33_winner_map_sk_all.pdf",
           "Winning rule per (base type, dataset) — SK rank, best $k$ per scenario (RQ3.3)")
-
 
 def generate_sk_s1(sk_rq33, figures_dir, model_order=None):
     out_dir    = os.path.join(figures_dir, "f_rq33_winner_map")

@@ -1,10 +1,5 @@
-"""
-F1: Per-Dataset Rank Heatmap — Singles (RQ1).
+# F1: Per-Dataset Rank Heatmap — Singles (RQ1).
 
-Matrix: 8 rows (datasets) × 8 cols (model types).
-Color = Borda rank of that model on that dataset (aggregated over 5 sample sizes).
-Light tint = rank 1 (best). Dark tint = rank 8 (worst).
-"""
 import os
 import numpy as np
 import pandas as pd
@@ -15,13 +10,7 @@ import matplotlib.colors as mcolors
 
 from .plot_utils import save_figure, ds_label
 
-
 def generate(borda_per_dataset, figures_dir, model_order=None, dataset_order=None):
-    """
-    Parameters
-    ----------
-    borda_per_dataset : [dataset, model_type, borda_total, borda_rank]
-    """
     out_dir = os.path.join(figures_dir, "f1")
     models   = model_order   or sorted(borda_per_dataset["model_type"].unique())
     datasets = dataset_order or sorted(borda_per_dataset["dataset"].unique())
@@ -58,14 +47,11 @@ def generate(borda_per_dataset, figures_dir, model_order=None, dataset_order=Non
     fig.tight_layout(pad=0.4)
     save_figure(fig, os.path.join(out_dir, "f1_rank_heatmap.pdf"))
 
-
 def generate_s1(sk_singles, figures_dir, model_order=None, dataset_order=None):
-    """S1-only variant: Borda ranks computed from S1 scenarios only."""
     from aggregators.sk_borda import compute_borda_per_dataset
 
     out_dir  = os.path.join(figures_dir, "f1")
 
-    # Filter SK data to S1 (smallest sample_size per dataset)
     mins = sk_singles.groupby("dataset")["sample_size"].min().reset_index(name="_min")
     sk_s1 = sk_singles.merge(mins, on="dataset")
     sk_s1 = sk_s1[sk_s1["sample_size"] == sk_s1["_min"]].drop(columns="_min")

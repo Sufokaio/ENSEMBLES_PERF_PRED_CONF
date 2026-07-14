@@ -1,10 +1,5 @@
-"""
-T4: Base-Learner Type Effect Within Ensembles (RQ3.1).
+# T4: Base-Learner Type Effect Within Ensembles (RQ3.1).
 
-Two sub-tables:
-  T4a — Lift table: Borda rank as single | Borda rank as ensemble base | shift
-  T4b — Multi-metric table for ensemble-base performance (like T1 but for ensembles)
-"""
 import os
 import numpy as np
 import pandas as pd
@@ -13,34 +8,18 @@ from output.utils import bold, save_tex, fmt_cell
 
 METRICS_EVAL = ["MRE", "MAE", "MBRE", "MIBRE"]
 
-
 def generate(df_singles_best, df_ens_best_rq31,
              sk_singles, borda_global_singles,
              sk_ens, borda_global_ens,
              latex_dir, model_order=None,
              df_baseline=None, sk_mixed=None):
-    """
-    Parameters
-    ----------
-    df_ens_best_rq31 : ensemble df after selecting best (k, rule) per
-                       (base_type, dataset, sample_size) — same as RQ2 best.
-    sk_singles / borda_global_singles : from singles analysis.
-    sk_ens / borda_global_ens         : run SK on ens_best using base_type as group.
-    df_baseline  : optional — if provided, SA and D columns are added to T4b.
-    sk_mixed     : optional — if provided, Borda rank in the 16-competitor mixed
-                   ranking is added as a column to T4b.
-    """
     out_dir = os.path.join(latex_dir, "t4")
     models  = model_order or sorted(df_singles_best["model_type"].unique())
 
-    # FINAL SET: only T4b mean (t4b_ens_rank_mean.tex)
-    # _lift_table(borda_global_singles, borda_global_ens, models, out_dir)  # not in final paper
     _ens_rank_table(df_ens_best_rq31, sk_ens, borda_global_ens, models, out_dir,
                     df_baseline=df_baseline, sk_mixed=sk_mixed)
 
-
 def _lift_table(borda_single, borda_ens, models, out_dir):
-    """T4a: rank-as-single | rank-as-ensemble | shift."""
     s_rank = borda_single.set_index("model_type")["borda_rank"].to_dict()
     e_rank = borda_ens.set_index("base_type")["borda_rank"].to_dict() \
              if "base_type" in borda_ens.columns \
@@ -57,7 +36,7 @@ def _lift_table(borda_single, borda_ens, models, out_dir):
         sr = s_rank.get(model, "--")
         er = e_rank.get(model, "--")
         if isinstance(sr, int) and isinstance(er, int):
-            shift = sr - er  # positive = improved as ensemble base
+            shift = sr - er
             shift_str = f"{shift:+d}"
         else:
             shift_str = "--"
@@ -65,23 +44,18 @@ def _lift_table(borda_single, borda_ens, models, out_dir):
     lines += [r"\bottomrule", r"\end{tabular}"]
     save_tex(lines, os.path.join(out_dir, "t4a_lift.tex"))
 
-
 def _ens_rank_table(df_ens, sk_ens, borda_global_ens, models, out_dir,
                     df_baseline=None, sk_mixed=None):
-    """T4b: multi-metric rank table for ensemble-base performance."""
-    # Rename base_type → model_type for uniform processing
     df = df_ens.rename(columns={"base_type": "model_type"})
     sk = sk_ens.rename(columns={"base_type": "model_type"}) \
          if "base_type" in sk_ens.columns else sk_ens
 
-    # SA/D augmented df (uses MAE rows from df_ens)
     df_aug = None
     if df_baseline is not None:
         from aggregators.comparisons import add_ensemble_sa_d
         df_aug_raw = add_ensemble_sa_d(df_ens, df_baseline)
         df_aug = df_aug_raw.rename(columns={"base_type": "model_type"})
 
-    # Mixed Borda rank — rank among all 16 competitors (8 singles + 8 ensembles)
     mixed_borda = {}
     if sk_mixed is not None:
         totals = (sk_mixed.groupby("competitor")["sk_rank"]
@@ -95,8 +69,6 @@ def _ens_rank_table(df_ens, sk_ens, borda_global_ens, models, out_dir,
     has_sa    = df_aug is not None
     has_borda = bool(mixed_borda)
 
-    # FINAL SET: only mean variant (not median)
-    # for agg in ("mean", "median"):
     for agg in ("mean",):
         rows = []
         for model in models:

@@ -1,16 +1,5 @@
-"""
-F_RQ33_COMBINED_HEATMAP: 8x3 heatmap with mean MRE and mean SK rank in each cell.
+# F_RQ33_COMBINED_HEATMAP: 8x3 heatmap with mean MRE and mean SK rank in each cell.
 
-Rows = 8 base types, cols = MEAN / IRWM / NN.
-Cell top line    : mean MRE across all evaluation scenarios.
-Cell bottom line : (mean SK rank) in parentheses, italic.
-Background color : mean SK rank — low (green) = statistically better.
-
-Inputs
-------
-sk_rq33          : [base_type, rule, dataset, sample_size, sk_rank]
-df_ens_best_rq33 : long-format ensemble df from select_best_ensembles_rq33
-"""
 import os
 import numpy as np
 import matplotlib
@@ -21,14 +10,11 @@ from .plot_utils import save_figure
 
 RULES = ["MEAN", "IRWM", "NN"]
 
-
 def _s1_filter(df):
     min_ss = df.groupby("dataset")["sample_size"].transform("min")
     return df[df["sample_size"] == min_ss]
 
-
 def _build_mats(sk_rq33, df_ens, base_types):
-    """Return (mre_mat, sk_mat), each shape (len(base_types), 3)."""
     mean_sk = (sk_rq33
                .groupby(["base_type", "rule"])["sk_rank"]
                .mean()
@@ -54,10 +40,8 @@ def _build_mats(sk_rq33, df_ens, base_types):
 
     return mre_mat, sk_mat
 
-
 def _draw(mre_mat, sk_mat, base_types, out_dir, fname, title=None):
-    # Transpose: base_types on x-axis, RULES on y-axis → wider, shorter figure
-    sk_T  = sk_mat.T    # shape (n_rules, n_base_types)
+    sk_T  = sk_mat.T
     mre_T = mre_mat.T
 
     vmin = np.nanmin(sk_T)
@@ -94,7 +78,6 @@ def _draw(mre_mat, sk_mat, base_types, out_dir, fname, title=None):
     fig.tight_layout(pad=0.4)
     save_figure(fig, os.path.join(out_dir, fname))
 
-
 def generate(sk_rq33, df_ens_best_rq33, figures_dir, model_order=None):
     out_dir    = os.path.join(figures_dir, "f_rq33_combined_heatmap")
     base_types = model_order or sorted(sk_rq33["base_type"].unique())
@@ -102,7 +85,6 @@ def generate(sk_rq33, df_ens_best_rq33, figures_dir, model_order=None):
     _draw(mre_mat, sk_mat, base_types, out_dir,
           "f_rq33_combined_heatmap_all.pdf",
           r"Mean MRE (SK rank) per (base type, rule) — best $k$, 40 scenarios (RQ3.3)")
-
 
 def generate_s1(sk_rq33, df_ens_best_rq33, figures_dir, model_order=None):
     out_dir    = os.path.join(figures_dir, "f_rq33_combined_heatmap")

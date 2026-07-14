@@ -1,15 +1,5 @@
-"""
-F_RQ33_RULE_BAR: Grouped bar chart — mean SK rank per rule, per base type (RQ3.3).
+# F_RQ33_RULE_BAR: Grouped bar chart — mean SK rank per rule, per base type (RQ3.3).
 
-x = 8 base types (grouped), 3 bars per group (MEAN / IRWM / NN).
-y = mean SK rank averaged across all 40 evaluation scenarios.
-Error bars = ± 1 std across scenarios.
-
-Shows both winner AND margin directly. Near-ties visible as bars of similar height.
-Each rule uses its per-scenario best k (from sk_rq33).
-
-Input: sk_rq33 DataFrame [base_type, rule, dataset, sample_size, sk_rank]
-"""
 import os
 import numpy as np
 import matplotlib
@@ -21,11 +11,9 @@ from .plot_utils import save_figure
 RULES       = ["MEAN", "IRWM", "NN"]
 RULE_COLORS = {"MEAN": "#4878CF", "IRWM": "#6ACC65", "NN": "#D65F5F"}
 
-
 def _s1_filter(df):
     min_ss = df.groupby("dataset")["sample_size"].transform("min")
     return df[df["sample_size"] == min_ss]
-
 
 def _draw(sk_rq33, base_types, out_dir, fname, title):
     agg = (sk_rq33
@@ -62,14 +50,12 @@ def _draw(sk_rq33, base_types, out_dir, fname, title):
     fig.tight_layout()
     save_figure(fig, os.path.join(out_dir, fname))
 
-
 def generate(sk_rq33, figures_dir, model_order=None):
     out_dir    = os.path.join(figures_dir, "f_rq33_rule_bar")
     base_types = model_order or sorted(sk_rq33["base_type"].unique())
     _draw(sk_rq33, base_types, out_dir,
           "f_rq33_rule_bar_all.pdf",
           "Mean SK rank per rule — best $k$ per scenario, 40 scenarios (RQ3.3)")
-
 
 def generate_s1(sk_rq33, figures_dir, model_order=None):
     out_dir    = os.path.join(figures_dir, "f_rq33_rule_bar")

@@ -1,9 +1,5 @@
-"""
-T_COMBINED_RANK: SK rank table for all 16 competitors (8 singles + 8 ensembles)
-evaluated together in the same Friedman/SK analysis (RQ2 supplement).
+# T_COMBINED_RANK: SK rank table for all 16 competitors (8 singles + 8 ensembles), RQ2 supplement.
 
-Rows are sorted by mean SK rank across all 4 metrics.
-"""
 import os
 import numpy as np
 import pandas as pd
@@ -12,19 +8,11 @@ from output.utils import bold, save_tex
 
 METRICS_EVAL = ["MRE", "MAE", "MBRE", "MIBRE"]
 
-
 def generate(sk_mixed, latex_dir, model_order=None):
-    """
-    Parameters
-    ----------
-    sk_mixed : output of compute_mixed_sk — columns include
-               [dataset, sample_size, metric, competitor, sk_rank, base_type, kind]
-    """
     out_dir = os.path.join(latex_dir, "t_combined_rank")
 
     competitors = sorted(sk_mixed["competitor"].unique())
 
-    # Build mean SK rank per competitor × metric
     pivot = (
         sk_mixed[sk_mixed["metric"].isin(METRICS_EVAL)]
         .groupby(["competitor", "metric"])["sk_rank"]
@@ -34,7 +22,6 @@ def generate(sk_mixed, latex_dir, model_order=None):
         .reindex(columns=METRICS_EVAL)
     )
 
-    # Sort by mean across all metrics
     pivot["mean_all"] = pivot[METRICS_EVAL].mean(axis=1)
     pivot = pivot.sort_values("mean_all")
     competitors_sorted = pivot.index.tolist()
@@ -50,7 +37,6 @@ def generate(sk_mixed, latex_dir, model_order=None):
         r"\midrule",
     ]
 
-    # Group singles then ensembles with a midrule separator
     singles_done = False
     for comp in competitors_sorted:
         kind = sk_mixed[sk_mixed["competitor"] == comp]["kind"].iloc[0]

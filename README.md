@@ -1,4 +1,4 @@
-# Improving Configurable Software Performance Prediction via Homogeneous Ensembles and Multi-Metric Evaluation
+# Homogeneous Ensembles for Configurable Software Performance Prediction: A Multi-Metric Empirical Study
 
 This repository contains the source code, the data used, and the raw
 results for each experiment from the corresponding paper.
@@ -13,8 +13,9 @@ configuration option, and the last column is the performance value to be
 predicted.
 
 ### /results_paper
-Due to the large size of the datasets and raw results, separate download links are provided for each dataset in `results_paper/results_paper.txt`. The structure of the folders is explained below.
-Later executions will save results in a separate `/results` folder.
+This folder does not contain the raw results directly. Due to their large size, separate download links are provided for each dataset in `results_paper/results_paper.txt` — download and extract them here to reproduce the paper's original results. The folder/file structure is explained below.
+
+Any new execution of `main.py` writes to `/results_new` instead (see `main.py`), so `/results_paper` is never overwritten. `/results_new` is git-ignored — it stays local and is not part of this repository.
 
 The format of the results is as follows:
 
@@ -77,6 +78,12 @@ This file contains the general logic described in the paper for
 evaluating the single variants from the previous step and constructing
 and evaluating the ensemble variants.
 
+### /analysis_new
+
+Analysis code (statistics, tables, figures) for the paper. It only *reads*
+result JSON files already produced by `main.py` — it never re-runs any
+model or experiment. See "How to Run the Analysis" below.
+
 ## Prerequisites and Installation
 
 Use `requirements.txt` and follow any runtime messages. The experiments were executed with Python 3.9.x.
@@ -91,4 +98,34 @@ To reproduce the experiments from the paper:
     python main.py --model baseline
     python main.py
 
-Note: Results from the next execution will be saved in `/results` by default.
+Note: Results from the next execution will be saved in `/results_new` by default.
+
+## How to Run the Analysis
+
+The code under `/analysis_new` only reads existing result JSON files (from
+`/results_paper` or `/results_new`) and never re-runs any experiment.
+
+1. Install its dependencies (on top of `requirements.txt`):
+
+       pip install -r analysis_new/requirements_analysis.txt
+
+2. Point it at the results you want to analyze by setting `RESULTS_DIR` in
+   `analysis_new/config.py`:
+
+       RESULTS_DIR = os.path.normpath(os.path.join(_HERE, "..", "results_new"))
+
+   Change `results_new` to `results_paper` (or any other results folder) to
+   analyze a different set of results.
+
+3. Run the pipeline from `analysis_new/`:
+
+       cd analysis_new
+       python run_all.py --all
+
+   Or run individual stages (each caches its output, so later stages reuse
+   it): `--load`, `--aggregate`, `--tables`, `--figures`. Add `--force` to
+   ignore the cache and recompute. Outputs are written to
+   `analysis_new/output_artifacts/` (`cache/`, `latex/`, `figures/`).
+
+4. Optional: preview the generated LaTeX tables in a browser with
+   `python view_tables.py`.

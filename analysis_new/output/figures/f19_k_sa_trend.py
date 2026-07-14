@@ -1,17 +1,5 @@
-"""
-F19: SA vs. Ensemble Size k (RQ3.2 / C2).
+# F19: SA vs. Ensemble Size k (RQ3.2 / C2).
 
-x = k (2..10).  y = mean SA aggregated across all base_types, datasets, sample_sizes.
-Three lines: MEAN / IRWM / NN.
-
-Reference lines:
-  SA = 0   → no better than random (red solid)
-  SA_5 ref → mean SA of a random 5-learner ensemble (gray dashed)
-
-This is the ONLY artifact that ties RQ3.2 directly to the SA pillar (C2).
-It answers: does increasing ensemble size move us further from the random baseline?
-Does the SA saturation point agree with the MRE elbow in F18?
-"""
 import os
 import numpy as np
 import pandas as pd
@@ -22,21 +10,12 @@ import matplotlib.pyplot as plt
 from .plot_utils import RULE_COLORS, RULE_MARKERS, save_figure
 from aggregators.comparisons import add_ensemble_sa_d
 
-
 def generate(df_ens_raw, df_baseline, figures_dir, sel_agg="median"):
-    """
-    Parameters
-    ----------
-    df_ens_raw  : full ensemble DataFrame (all k, all rules)
-    df_baseline : [dataset, sample_size, MAEp0, Sp0, SA_5]
-    sel_agg     : "median" or "mean"
-    """
     out_dir = os.path.join(figures_dir, "f19")
     fn      = np.median if sel_agg == "median" else np.mean
     rules   = ["MEAN", "IRWM", "NN"]
     k_vals  = sorted(df_ens_raw["k"].unique())
 
-    # Augment raw ensembles with SA (requires MAE column to be present)
     ens_aug = add_ensemble_sa_d(df_ens_raw, df_baseline)
     sa_sub  = ens_aug[ens_aug["metric"] == "SA"]
 

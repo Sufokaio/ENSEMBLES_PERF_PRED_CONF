@@ -1,21 +1,5 @@
-"""
-T7: Metric Rank Disagreement Matrix (RQ1 / C2).
+# T7: Metric Rank Disagreement Matrix (RQ1 / C2).
 
-4×4 symmetric matrix.
-Row = metric A,  col = metric B.
-Cell = number of (model_type, dataset, sample_size) triples where
-  rank_A(model) ≠ rank_B(model) within that scenario.
-Diagonal = 0.  Off-diagonal: higher = the two metrics induce different rankings.
-
-Why it belongs in the paper:
-  - Directly quantifies how often MRE disagrees with MAE, MBRE, and MIBRE.
-  - The (MRE, MBRE) and (MRE, MIBRE) cells are the C2 empirical anchor
-    referenced in the plan: "cases where MRE disagrees with MBRE and MIBRE."
-  - Numbers in this table should match or complement what F6 shows visually.
-
-Bold = maximum off-diagonal cell (most disagreement pair).
-Also writes a companion table with disagreement rates (% of triples).
-"""
 import os
 import numpy as np
 import pandas as pd
@@ -24,19 +8,12 @@ from output.utils import bold, save_tex
 
 METRICS_EVAL = ["MRE", "MAE", "MBRE", "MIBRE"]
 
-
 def generate(df_singles_best, latex_dir, model_order=None):
-    """
-    Parameters
-    ----------
-    df_singles_best : best-variant singles long-format
-    """
     out_dir = os.path.join(latex_dir, "t7")
     models  = model_order or sorted(df_singles_best["model_type"].unique())
 
     sub = df_singles_best[df_singles_best["metric"].isin(METRICS_EVAL)]
 
-    # Median per (model, dataset, sample_size, metric)
     med = (
         sub.groupby(["model_type", "dataset", "sample_size", "metric"])["value"]
         .median().reset_index()
@@ -46,7 +23,6 @@ def generate(df_singles_best, latex_dir, model_order=None):
         columns="metric", values="value"
     ).reset_index()
 
-    # Rank models within each (dataset, sample_size) scenario
     records = []
     for (ds, ss), grp in pivot.groupby(["dataset", "sample_size"]):
         g = grp.copy()
@@ -57,7 +33,6 @@ def generate(df_singles_best, latex_dir, model_order=None):
     ranked = pd.concat(records, ignore_index=True)
     n_total = len(ranked)
 
-    # Count pairwise disagreements
     mat_count = np.zeros((4, 4), dtype=int)
     for i, ma in enumerate(METRICS_EVAL):
         for j, mb in enumerate(METRICS_EVAL):
@@ -67,9 +42,8 @@ def generate(df_singles_best, latex_dir, model_order=None):
             if ca in ranked.columns and cb in ranked.columns:
                 mat_count[i, j] = int((ranked[ca] != ranked[cb]).sum())
 
-    mat_pct = mat_count / n_total * 100  # percent
+    mat_pct = mat_count / n_total * 100
 
-    # ── Counts table ───────────────────────────────────────────────────────
     off_diag = mat_count.copy(); np.fill_diagonal(off_diag, 0)
     max_val  = off_diag.max()
 

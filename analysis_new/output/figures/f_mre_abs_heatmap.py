@@ -1,13 +1,5 @@
-"""
-F_MRE_ABS_HEATMAP: Absolute MRE heatmap — models x datasets (RQ1).
+# F_MRE_ABS_HEATMAP: Absolute MRE heatmap — models x datasets (RQ1).
 
-Datasets sorted easy→hard (lowest best-achievable MRE on the left).
-Four variants: median vs mean  x  all sample sizes vs S1 only.
-
-When sk_singles is provided, each cell shows:
-  top line   — MRE value (larger)
-  bottom line — mean SK rank across scenarios (smaller, grey)
-"""
 import os
 import numpy as np
 import matplotlib
@@ -16,12 +8,7 @@ import matplotlib.pyplot as plt
 
 from .plot_utils import save_figure, ds_label
 
-
 def _sk_pivot(sk_singles, sample_sizes=None):
-    """Mean SK rank (MRE metric) per (model_type, dataset).
-
-    sample_sizes : if given, filter to those sample sizes before averaging.
-    """
     sub = sk_singles[sk_singles["metric"] == "MRE"].copy()
     if sample_sizes is not None:
         sub = sub[sub["sample_size"].isin(sample_sizes)]
@@ -29,7 +16,6 @@ def _sk_pivot(sk_singles, sample_sizes=None):
         sub.groupby(["model_type", "dataset"])["sk_rank"]
         .mean().unstack("dataset")
     )
-
 
 def _draw(pivot_mre, models, ds_order, agg_label, scope_label,
           out_dir, fname, sk_piv=None):
@@ -68,31 +54,24 @@ def _draw(pivot_mre, models, ds_order, agg_label, scope_label,
     fig.tight_layout(pad=0.4)
     save_figure(fig, os.path.join(out_dir, fname))
 
-
 def generate(df_singles_best, figures_dir, sk_singles=None,
              model_order=None, dataset_order=None):
     out_dir = os.path.join(figures_dir, "f_mre_abs_heatmap")
     models  = model_order or sorted(df_singles_best["model_type"].unique())
     sub     = df_singles_best[df_singles_best["metric"] == "MRE"]
 
-    # difficulty order from median MRE
     med_pivot = sub.groupby(["model_type", "dataset"])["value"].median().unstack("dataset")
     ds_order  = dataset_order or med_pivot.min(axis=0).sort_values().index.tolist()
 
-    # S1 subset
     mins   = sub.groupby("dataset")["sample_size"].min().reset_index(name="_min")
     sub_s1 = sub.merge(mins, on="dataset").query("sample_size == _min").drop(columns="_min")
     s1_sizes = sub_s1["sample_size"].unique() if not sub_s1.empty else None
 
-    # SK rank pivots (if sk_singles provided)
     sk_all = _sk_pivot(sk_singles) if sk_singles is not None else None
     sk_s1  = _sk_pivot(sk_singles, sample_sizes=s1_sizes) \
              if sk_singles is not None and s1_sizes is not None else None
 
-    # FINAL SET: only mean variants (not median)
-    # for agg_label, agg_fn in [("Median", "median"), ("Mean", "mean")]:
     for agg_label, agg_fn in [("Mean", "mean")]:
-        # all scenarios
         pivot_all = getattr(
             sub.groupby(["model_type", "dataset"])["value"], agg_fn
         )().unstack("dataset")
@@ -101,7 +80,6 @@ def generate(df_singles_best, figures_dir, sk_singles=None,
               f"f_mre_abs_heatmap_{agg_fn}_all.pdf",
               sk_piv=sk_all)
 
-        # S1 only
         pivot_s1 = getattr(
             sub_s1.groupby(["model_type", "dataset"])["value"], agg_fn
         )().unstack("dataset")

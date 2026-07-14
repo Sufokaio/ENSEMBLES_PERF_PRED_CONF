@@ -1,19 +1,5 @@
-"""
-F18: Optimal k Analysis — Two Panels (RQ3.2).
+# F18: Optimal k Analysis — Two Panels (RQ3.2).
 
-Left panel: Histogram of the best-k selected across all
-  (base_type, dataset, sample_size, rule) combinations (using median MRE).
-  Answers: which k is most often selected as optimal?
-
-Right panel: Marginal gain curve.
-  y = mean(MRE(k) - MRE(k-1)) aggregated across all base_types, datasets, sample_sizes.
-  x = k (3..10).  Three lines: MEAN / IRWM / NN.
-  Reference line at y = 0 (adding one more learner no longer helps on average).
-  Answers: where does the elbow occur? How quickly do returns diminish?
-
-Together these two panels give the practitioner a concrete answer for RQ3.2:
-"what k should I use, and does it matter much?"
-"""
 import os
 import numpy as np
 import pandas as pd
@@ -23,22 +9,13 @@ import matplotlib.pyplot as plt
 
 from .plot_utils import RULE_COLORS, RULE_MARKERS, save_figure
 
-
 def generate(df_ens_raw, figures_dir, sel_agg="median"):
-    """
-    Parameters
-    ----------
-    df_ens_raw : full ensemble DataFrame (all k, all rules)
-                 [base_type, k, rule, dataset, sample_size, run, metric, value]
-    sel_agg    : "median" or "mean"
-    """
     out_dir = os.path.join(figures_dir, "f18")
     fn      = np.median if sel_agg == "median" else np.mean
     rules   = ["MEAN", "IRWM", "NN"]
 
     sub = df_ens_raw[df_ens_raw["metric"] == "MRE"]
 
-    # ── Find best k per (base_type, rule, dataset, sample_size) ──────────
     agg = (
         sub.groupby(["base_type", "rule", "dataset", "sample_size", "k"])["value"]
         .agg(fn).reset_index().rename(columns={"value": "agg_val"})
@@ -46,7 +23,6 @@ def generate(df_ens_raw, figures_dir, sel_agg="median"):
     best_k_idx = agg.groupby(["base_type", "rule", "dataset", "sample_size"])["agg_val"].idxmin()
     best_k_series = agg.loc[best_k_idx, "k"].values
 
-    # ── Marginal gain per rule ────────────────────────────────────────────
     k_vals = sorted(sub["k"].unique())
     marginal = {rule: [] for rule in rules}
     k_diff_vals = []
@@ -63,10 +39,8 @@ def generate(df_ens_raw, figures_dir, sel_agg="median"):
             else:
                 marginal[rule].append(np.nan)
 
-    # ── Figure ────────────────────────────────────────────────────────────
     fig, (ax_hist, ax_mg) = plt.subplots(1, 2, figsize=(10, 3.8))
 
-    # Left: histogram of best k
     k_min, k_max = int(best_k_series.min()), int(best_k_series.max())
     bins = np.arange(k_min - 0.5, k_max + 1.5, 1)
     ax_hist.hist(best_k_series, bins=bins, color="#4878d0", edgecolor="white", linewidth=0.6)
@@ -80,7 +54,6 @@ def generate(df_ens_raw, figures_dir, sel_agg="median"):
     ax_hist.legend(fontsize=8)
     ax_hist.grid(True, axis="y", alpha=0.3, linewidth=0.5)
 
-    # Right: marginal gain
     for rule in rules:
         ax_mg.plot(k_diff_vals, marginal[rule],
                    marker=RULE_MARKERS.get(rule, "o"), markersize=5, linewidth=1.5,

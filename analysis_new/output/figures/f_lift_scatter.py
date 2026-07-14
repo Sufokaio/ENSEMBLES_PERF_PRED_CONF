@@ -1,10 +1,5 @@
-"""
-F_LIFT_SCATTER: SK rank lift — single vs. ensemble (RQ2/mixed).
+# F_LIFT_SCATTER: SK rank lift — single vs. ensemble (RQ2/mixed).
 
-One point per base_type. x = mean SK rank as single, y = mean SK rank as ensemble,
-both computed in the MIXED ranking (singles + ensembles competing together, MRE).
-Points below the diagonal = ensemble improved its statistical standing.
-"""
 import os
 import numpy as np
 import pandas as pd
@@ -13,7 +8,6 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 from .plot_utils import MODEL_COLORS, save_figure
-
 
 def generate(sk_mixed, figures_dir, model_order=None):
     out_dir = os.path.join(figures_dir, "f_lift_scatter")

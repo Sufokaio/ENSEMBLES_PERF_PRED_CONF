@@ -1,11 +1,5 @@
-"""
-F5: SA Bar Chart — Singles vs. Ensembles (C2 / C4 / all RQs).
+# F5: SA Bar Chart — Singles vs. Ensembles (C2 / C4 / all RQs).
 
-8 groups (base model type), 2 bars each: single (best variant) vs. best ensemble.
-Height = mean SA across all 40 scenarios.
-Error bars = SD across scenarios.
-Reference lines: SA=0 (no better than random) and SA=SA_5 (baseline).
-"""
 import os
 import numpy as np
 import pandas as pd
@@ -20,33 +14,21 @@ _SINGLE_ALPHA = 0.55
 _ENS_ALPHA    = 1.00
 _BAR_WIDTH    = 0.35
 
-
 def generate(df_singles_best, df_ens_best, df_baseline, figures_dir, model_order=None):
-    """
-    Parameters
-    ----------
-    df_singles_best : best-variant singles (must include SA metric rows)
-    df_ens_best     : best-variant ensembles (RQ2)
-    df_baseline     : [dataset, sample_size, MAEp0, Sp0, SA_5]
-    """
     out_dir = os.path.join(figures_dir, "f5")
     models  = model_order or sorted(df_singles_best["model_type"].unique())
 
-    # Augment ensembles with SA
     ens_aug = add_ensemble_sa_d(df_ens_best, df_baseline)
 
-    # Mean SA_5 (scalar reference line)
     sa5_ref = float(df_baseline["SA_5"].mean()) if "SA_5" in df_baseline.columns else None
 
     x = np.arange(len(models))
     fig, ax = plt.subplots(figsize=(7.5, 3.5))
 
     for i, model in enumerate(models):
-        # Single SA
         s_vals = df_singles_best[
             (df_singles_best["model_type"] == model) & (df_singles_best["metric"] == "SA")
         ]["value"].values
-        # Ensemble SA
         e_vals = ens_aug[
             (ens_aug["base_type"] == model) & (ens_aug["metric"] == "SA")
         ]["value"].values
@@ -78,7 +60,6 @@ def generate(df_singles_best, df_ens_best, df_baseline, figures_dir, model_order
     ax.set_ylabel("Mean SA (across all 40 scenarios)")
     ax.set_title("Standardized Accuracy: singles vs. best ensembles")
 
-    # Custom legend (single vs. ensemble via hatch/alpha)
     from matplotlib.patches import Patch
     legend_elements = [
         Patch(facecolor="gray", alpha=_SINGLE_ALPHA, label="Single (best variant)"),

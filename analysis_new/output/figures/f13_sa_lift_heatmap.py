@@ -1,15 +1,5 @@
-"""
-F13: SA Lift Heatmap — Best Ensemble vs. Single (RQ2 / C2).
+# F13: SA Lift Heatmap — Best Ensemble vs. Single (RQ2 / C2).
 
-Matrix: rows = base_type (8), cols = dataset (8).
-Color = mean(SA_ens) − mean(SA_single), averaged across all sample_sizes and runs.
-Diverging: green = ensemble moves further from random baseline,
-           red   = single is closer to random (ensemble regresses).
-
-This is the SA/Δ angle of RQ2.  Error-based F2 and F12 say "is error lower?"
-This figure says "does the ensemble help relative to the random baseline?"
-Both can disagree — that's the C2 story.
-"""
 import os
 import numpy as np
 import pandas as pd
@@ -20,23 +10,14 @@ import matplotlib.pyplot as plt
 from .plot_utils import save_figure
 from aggregators.comparisons import add_ensemble_sa_d
 
-
 def generate(df_singles_best, df_ens_best_rq2, df_baseline, figures_dir,
              model_order=None, dataset_order=None):
-    """
-    Parameters
-    ----------
-    df_singles_best : must include metric = "SA"
-    df_ens_best_rq2 : SA will be computed via add_ensemble_sa_d
-    df_baseline     : [dataset, sample_size, MAEp0, Sp0, SA_5]
-    """
     out_dir  = os.path.join(figures_dir, "f13")
     models   = model_order   or sorted(df_ens_best_rq2["base_type"].unique())
     datasets = dataset_order or sorted(df_singles_best["dataset"].unique())
 
     ens_aug = add_ensemble_sa_d(df_ens_best_rq2, df_baseline)
 
-    # Per (base_type, dataset): mean SA across all sample_size + runs
     s_sa = (
         df_singles_best[df_singles_best["metric"] == "SA"]
         .groupby(["model_type", "dataset"])["value"].mean()

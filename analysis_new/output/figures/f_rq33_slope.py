@@ -1,15 +1,5 @@
-"""
-F_RQ33_SLOPE: Slope graph — mean SK rank per rule at best-k-per-scenario (RQ3.3).
+# F_RQ33_SLOPE: Slope graph — mean SK rank per rule at best-k-per-scenario (RQ3.3).
 
-x-axis = 3 combination rules (MEAN / IRWM / NN)
-y-axis = mean SK rank across all scenarios (lower = better)
-One line per base_type.
-
-Each rule uses its per-scenario best k (from ensembles_best_rq33 / sk_rq33).
-No k averaging — each rule is evaluated at its local optimum per scenario.
-
-Input: sk_rq33 DataFrame [base_type, rule, dataset, sample_size, sk_rank]
-"""
 import os
 import numpy as np
 import matplotlib
@@ -21,11 +11,9 @@ from .plot_utils import save_figure
 RULES = ["MEAN", "IRWM", "NN"]
 RULE_X = {r: i for i, r in enumerate(RULES)}
 
-
 def _s1_filter(df):
     min_ss = df.groupby("dataset")["sample_size"].transform("min")
     return df[df["sample_size"] == min_ss]
-
 
 def _draw(mean_sk, base_types, out_dir, fname, suptitle):
     cmap   = matplotlib.cm.get_cmap("tab10", len(base_types))
@@ -40,7 +28,6 @@ def _draw(mean_sk, base_types, out_dir, fname, suptitle):
         ax.plot(xs, ys, marker="o", markersize=6, linewidth=1.6,
                 color=colors[bt], label=bt, zorder=3)
 
-        # Label at right end
         last_x = xs[-1]
         last_y = ys[-1]
         ax.text(last_x + 0.05, last_y, bt, fontsize=7.5,
@@ -58,7 +45,6 @@ def _draw(mean_sk, base_types, out_dir, fname, suptitle):
     fig.tight_layout()
     save_figure(fig, os.path.join(out_dir, fname))
 
-
 def generate(sk_rq33, figures_dir, model_order=None):
     out_dir    = os.path.join(figures_dir, "f_rq33_slope")
     base_types = model_order or sorted(sk_rq33["base_type"].unique())
@@ -68,7 +54,6 @@ def generate(sk_rq33, figures_dir, model_order=None):
     _draw(mean_sk, base_types, out_dir,
           "f_rq33_slope_all.pdf",
           "Mean SK rank per combination rule — best $k$ per scenario (RQ3.3, 40 scenarios)")
-
 
 def generate_s1(sk_rq33, figures_dir, model_order=None):
     out_dir    = os.path.join(figures_dir, "f_rq33_slope")

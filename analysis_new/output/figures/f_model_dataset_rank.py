@@ -1,10 +1,5 @@
-"""
-F_MODEL_DATASET_RANK: Dataset x sample-size rank heatmap for top-2 models (RQ1).
+# F_MODEL_DATASET_RANK: Dataset x sample-size rank heatmap for top-2 models (RQ1).
 
-2-panel heatmap side by side: HINNPerf and DeepPerf.
-Cell (dataset, S1-S5) = rank among all 8 models by median MRE.
-Green = rank 1, Red = rank 8.  Reveals where each model excels / drops.
-"""
 import os
 import numpy as np
 import pandas as pd
@@ -16,7 +11,6 @@ from .plot_utils import save_figure
 
 TOP_MODELS = ["HINNPerf", "DeepPerf"]
 
-
 def _add_sample_rank(df):
     df    = df.copy()
     sizes = (
@@ -25,7 +19,6 @@ def _add_sample_rank(df):
     )
     sizes["sample_rank"] = sizes.groupby("dataset").cumcount() + 1
     return df.merge(sizes, on=["dataset", "sample_size"])
-
 
 def generate(df_singles_best, figures_dir, model_order=None, dataset_order=None):
     out_dir  = os.path.join(figures_dir, "f_model_dataset_rank")

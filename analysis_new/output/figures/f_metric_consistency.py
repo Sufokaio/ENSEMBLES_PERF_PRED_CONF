@@ -1,11 +1,5 @@
-"""
-F_METRIC_CONSISTENCY: Metric-consistency heatmap — models x datasets (RQ1 / Contribution 2).
+# F_METRIC_CONSISTENCY: Metric-consistency heatmap — models x datasets (RQ1 / Contribution 2).
 
-Cell (model, dataset) = std of that model's ranks across the 4 metrics.
-Low value  = model ranks consistently regardless of which metric you pick.
-High value = model is metric-sensitive on that dataset.
-One compact heatmap — operationalises "metric stability" directly.
-"""
 import os
 import numpy as np
 import pandas as pd
@@ -16,7 +10,6 @@ import matplotlib.pyplot as plt
 from .plot_utils import save_figure
 
 METRICS = ["MRE", "MAE", "MBRE", "MIBRE"]
-
 
 def generate(df_singles_best, figures_dir, model_order=None, dataset_order=None):
     out_dir  = os.path.join(figures_dir, "f_metric_consistency")
@@ -29,13 +22,11 @@ def generate(df_singles_best, figures_dir, model_order=None, dataset_order=None)
     )
     med["rank"] = med.groupby(["dataset", "metric"])["value"].rank(method="average")
 
-    # std of ranks across 4 metrics per (model, dataset)
     std_pivot = (
         med.groupby(["model_type", "dataset"])["rank"]
         .std().unstack("dataset")
     )
 
-    # sort datasets by mean consistency (most stable datasets on left)
     ds_order = dataset_order or std_pivot.mean(axis=0).sort_values().index.tolist()
     mat = std_pivot.reindex(index=models, columns=ds_order).values.astype(float)
 

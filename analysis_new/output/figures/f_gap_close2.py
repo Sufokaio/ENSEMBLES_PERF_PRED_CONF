@@ -1,11 +1,5 @@
-"""
-F_GAP_CLOSE2: S1-only variant of f_gap_close (RQ2).
+# F_GAP_CLOSE2: S1-only variant of f_gap_close (RQ2).
 
-Same heatmap as f_gap_close (base_type × dataset, color = Δ SK rank),
-but restricted to the smallest sample size per dataset (S1 tier = 8 scenarios
-instead of 40). Reveals whether ensemble gains are consistent at the most
-data-scarce setting.
-"""
 import os
 import numpy as np
 import matplotlib
@@ -14,12 +8,9 @@ import matplotlib.pyplot as plt
 
 from .plot_utils import save_figure
 
-
 def _s1_filter(df):
-    """Keep only rows at the minimum sample_size for each dataset."""
     min_ss = df.groupby("dataset")["sample_size"].transform("min")
     return df[df["sample_size"] == min_ss]
-
 
 def generate(sk_mixed, figures_dir, model_order=None, dataset_order=None):
     out_dir    = os.path.join(figures_dir, "f_gap_close2")

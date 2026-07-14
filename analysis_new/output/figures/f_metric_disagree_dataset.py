@@ -1,10 +1,5 @@
-"""
-F_METRIC_DISAGREE_DATASET: Per-dataset metric disagreement on best model (RQ1 / Contribution 2).
+# F_METRIC_DISAGREE_DATASET: Per-dataset metric disagreement on best model (RQ1 / Contribution 2).
 
-For each (dataset, sample_size): find best model by MRE vs best by MAE / MBRE / MIBRE.
-Bar chart: x = datasets, 3 bars = % of 5 sample sizes where MRE and metric X pick different winner.
-Dark bar = that dataset is metric-contested; light bar = metric-stable.
-"""
 import os
 import numpy as np
 import pandas as pd
@@ -16,7 +11,6 @@ from .plot_utils import save_figure
 
 COMPARE = ["MAE", "MBRE", "MIBRE"]
 COLORS  = {"MAE": "#2166ac", "MBRE": "#d01c8b", "MIBRE": "#e6813a"}
-
 
 def generate(df_singles_best, figures_dir, dataset_order=None):
     out_dir  = os.path.join(figures_dir, "f_metric_disagree_dataset")

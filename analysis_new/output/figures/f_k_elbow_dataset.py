@@ -1,15 +1,5 @@
-"""
-F_K_ELBOW_DATASET: MRE vs k (RQ3.2) — by-dataset variants.
+# F_K_ELBOW_DATASET: MRE vs k (RQ3.2) — by-dataset variants.
 
-Original generate():
-  8 panels (one per dataset), x = k, 3 lines per rule (MEAN/IRWM/NN),
-  y = median MRE aggregated across all base types.
-
-New by-base variants — 1 line per base type, MRE aggregated across rules:
-  generate_by_base():      8 dataset panels, all sample sizes.
-  generate_by_base_s1():   8 dataset panels, smallest sample size only.
-  generate_by_base_agg():  1 panel, aggregated across datasets AND rules.
-"""
 import os
 import numpy as np
 import matplotlib
@@ -19,7 +9,6 @@ import matplotlib.pyplot as plt
 from .plot_utils import RULE_COLORS, RULE_MARKERS, MODEL_COLORS, save_figure
 
 RULES = ["MEAN", "IRWM", "NN"]
-
 
 def generate(df_ens_raw, figures_dir, dataset_order=None):
     out_dir  = os.path.join(figures_dir, "f_k_elbow_dataset")
@@ -61,11 +50,6 @@ def generate(df_ens_raw, figures_dir, dataset_order=None):
     fig.tight_layout()
     save_figure(fig, os.path.join(out_dir, "f_k_elbow_dataset.pdf"))
 
-
-# ──────────────────────────────────────────────────────────────────────────────
-# By-base-type variants
-# ──────────────────────────────────────────────────────────────────────────────
-
 def _plot_bybase_panels(sub, datasets, models, ks, out_dir, fname, ylabel, suptitle):
     ncols = 4
     nrows = (len(datasets) + ncols - 1) // ncols
@@ -100,9 +84,7 @@ def _plot_bybase_panels(sub, datasets, models, ks, out_dir, fname, ylabel, supti
     fig.tight_layout()
     save_figure(fig, os.path.join(out_dir, fname))
 
-
 def generate_by_base(df_ens_raw, figures_dir, dataset_order=None, model_order=None):
-    """8 dataset panels, 1 line per base type, MRE aggregated across all rules."""
     out_dir  = os.path.join(figures_dir, "f_k_elbow_dataset")
     sub      = df_ens_raw[df_ens_raw["metric"] == "MRE"]
     datasets = dataset_order or sorted(sub["dataset"].unique())
@@ -115,15 +97,11 @@ def generate_by_base(df_ens_raw, figures_dir, dataset_order=None, model_order=No
         suptitle="MRE vs k per dataset — 1 line per base type, rules aggregated (RQ3.2)",
     )
 
-
 def _s1_filter(df):
-    """Keep only the smallest sample_size for each dataset (S1 tier)."""
     min_ss = df.groupby("dataset")["sample_size"].transform("min")
     return df[df["sample_size"] == min_ss]
 
-
 def generate_by_base_s1(df_ens_raw, figures_dir, dataset_order=None, model_order=None):
-    """8 dataset panels, 1 line per base type, S1 (per-dataset minimum sample size) only, rules aggregated."""
     out_dir  = os.path.join(figures_dir, "f_k_elbow_dataset")
     sub      = df_ens_raw[df_ens_raw["metric"] == "MRE"]
     sub      = _s1_filter(sub)
@@ -137,9 +115,7 @@ def generate_by_base_s1(df_ens_raw, figures_dir, dataset_order=None, model_order
         suptitle="MRE vs k per dataset (S1 per dataset) — 1 line per base type, rules aggregated (RQ3.2)",
     )
 
-
 def _plot_bybase_agg(sub, models, ks, out_dir, fname, ylabel, title):
-    """Shared helper for single-panel aggregate plots."""
     fig, ax = plt.subplots(figsize=(5.5, 3.8))
     for model in models:
         ys = []
@@ -157,9 +133,7 @@ def _plot_bybase_agg(sub, models, ks, out_dir, fname, ylabel, title):
     fig.tight_layout()
     save_figure(fig, os.path.join(out_dir, fname))
 
-
 def generate_by_base_agg(df_ens_raw, figures_dir, model_order=None):
-    """1 panel: 1 line per base type, MRE aggregated across all datasets AND rules (all 40 scenarios)."""
     out_dir = os.path.join(figures_dir, "f_k_elbow_dataset")
     sub     = df_ens_raw[df_ens_raw["metric"] == "MRE"]
     models  = model_order or sorted(sub["base_type"].unique())
@@ -171,9 +145,7 @@ def generate_by_base_agg(df_ens_raw, figures_dir, model_order=None):
         title="MRE vs k — 1 line per base type,\naggregated across all datasets and rules (RQ3.2)",
     )
 
-
 def generate_by_base_agg_s1(df_ens_raw, figures_dir, model_order=None):
-    """1 panel: 1 line per base type, S1 (per-dataset minimum sample size) aggregated across datasets and rules."""
     out_dir = os.path.join(figures_dir, "f_k_elbow_dataset")
     sub     = df_ens_raw[df_ens_raw["metric"] == "MRE"]
     sub     = _s1_filter(sub)

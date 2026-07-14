@@ -1,16 +1,11 @@
-"""
-F_RANK_STABILITY: Model rank stability across datasets (RQ1).
+# F_RANK_STABILITY: Model rank stability across datasets (RQ1).
 
-Boxplot: one box per model, y = Borda rank across 8 datasets.
-Tight box near rank 1 = generalist. Wide box = specialist.
-"""
 import os
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 from .plot_utils import MODEL_COLORS, save_figure
-
 
 def generate(borda_ds_singles, figures_dir, model_order=None):
     out_dir = os.path.join(figures_dir, "f_rank_stability")

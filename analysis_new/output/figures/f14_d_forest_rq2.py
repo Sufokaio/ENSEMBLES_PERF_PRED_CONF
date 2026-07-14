@@ -1,18 +1,5 @@
-"""
-F14: Δ Forest Plot — Singles vs. Best Ensembles (RQ2 / C2).
+# F14: Δ Forest Plot — Singles vs. Best Ensembles (RQ2 / C2).
 
-One row per base_type.  Two points per row:
-  open circle  = mean Δ for the single (best variant)
-  filled circle = mean Δ for the best ensemble
-Connected by a thin line.
-
-x-axis: mean Δ (more negative = better than random).
-Vertical red line at Δ = 0.
-
-The shift from open → filled circle quantifies how much ensembling
-improves the model's standing relative to the random baseline —
-which is a stronger claim than just "error went down."
-"""
 import os
 import numpy as np
 import pandas as pd
@@ -24,22 +11,13 @@ from matplotlib.lines import Line2D
 from .plot_utils import MODEL_COLORS, save_figure
 from aggregators.comparisons import add_ensemble_sa_d
 
-
 def generate(df_singles_best, df_ens_best_rq2, df_baseline, figures_dir, model_order=None):
-    """
-    Parameters
-    ----------
-    df_singles_best : must include metric = "D"
-    df_ens_best_rq2 : D will be computed via add_ensemble_sa_d
-    df_baseline     : [dataset, sample_size, MAEp0, Sp0]
-    """
     out_dir = os.path.join(figures_dir, "f14")
     models  = model_order or sorted(df_singles_best["model_type"].unique())
 
     ens_aug = add_ensemble_sa_d(df_ens_best_rq2, df_baseline)
 
     def _mean_d_per_scenario(df, model_col, model_name):
-        """Mean Δ aggregated per scenario (dataset, sample_size), then mean of that."""
         sub = df[(df[model_col] == model_name) & (df["metric"] == "D")]
         per_sc = sub.groupby(["dataset", "sample_size"])["value"].mean()
         return (float(per_sc.mean()), float(per_sc.std(ddof=1))) if len(per_sc) > 1 \
@@ -55,12 +33,12 @@ def generate(df_singles_best, df_ens_best_rq2, df_baseline, figures_dir, model_o
 
     fig, ax = plt.subplots(figsize=(6.5, 4.2))
 
-    OFF = 0.15  # vertical offset so single/ensemble error bars don't overlap
+    OFF = 0.15
 
     for i, row in res.iterrows():
         color = MODEL_COLORS.get(row["model"], "#333")
-        ys = i + OFF   # single above
-        ye = i - OFF   # ensemble below
+        ys = i + OFF
+        ye = i - OFF
         if not (np.isnan(row["D_single"]) or np.isnan(row["D_ens"])):
             ax.plot([row["D_single"], row["D_ens"]], [ys, ye],
                     color=color, linewidth=1.1, alpha=0.65, zorder=1)

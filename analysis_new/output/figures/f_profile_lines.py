@@ -1,9 +1,5 @@
-"""
-F_PROFILE_LINES: Model MRE profiles across datasets, easy → hard (RQ1).
+# F_PROFILE_LINES: Model MRE profiles across datasets, easy → hard (RQ1).
 
-8 lines (one per model), x = datasets sorted by best achievable MRE.
-Crossing lines = ranking changes as datasets get harder.
-"""
 import os
 import numpy as np
 import matplotlib
@@ -12,20 +8,17 @@ import matplotlib.pyplot as plt
 
 from .plot_utils import MODEL_COLORS, save_figure
 
-
 def generate(df_singles_best, figures_dir, model_order=None):
     out_dir = os.path.join(figures_dir, "f_profile_lines")
     models  = model_order or sorted(df_singles_best["model_type"].unique())
     sub     = df_singles_best[df_singles_best["metric"] == "MRE"]
 
-    # Per (model, dataset): median MRE across all sample sizes + runs
     med_ds = (
         sub.groupby(["model_type", "dataset"])["value"]
         .median()
         .unstack("dataset")
     )
 
-    # Sort datasets easy→hard by best achievable MRE
     ds_sorted = med_ds.min(axis=0).sort_values().index.tolist()
 
     fig, ax = plt.subplots(figsize=(8, 3.8))

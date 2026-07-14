@@ -1,16 +1,5 @@
-"""
-F17: Base-Type × Combination-Rule Interaction Heatmap (RQ3.1 / RQ3.3 bridge).
+# F17: Base-Type × Combination-Rule Interaction Heatmap (RQ3.1 / RQ3.3 bridge).
 
-Two-panel figure:
-  Left : 8 (base_type) × 3 (rule) heatmap of absolute median MRE.
-  Right: same matrix row-normalised (0 = best rule for that model, 1 = worst).
-
-The left panel answers: which combos produce the lowest error overall?
-The right panel answers: which rule does each model type prefer?
-
-This bridges RQ3.1 and RQ3.3 — it shows that the rule effect is NOT uniform
-across base types, motivating the 3.1/3.3 split as separate sub-questions.
-"""
 import os
 import numpy as np
 import pandas as pd
@@ -22,14 +11,7 @@ from .plot_utils import save_figure
 
 RULES = ["MEAN", "IRWM", "NN"]
 
-
 def generate(df_ens_rq33, figures_dir, model_order=None):
-    """
-    Parameters
-    ----------
-    df_ens_rq33 : best-k-per-rule ensemble DataFrame
-                  [base_type, rule, dataset, sample_size, run, metric, value]
-    """
     out_dir = os.path.join(figures_dir, "f17")
     models  = model_order or sorted(df_ens_rq33["base_type"].unique())
 
@@ -41,7 +23,6 @@ def generate(df_ens_rq33, figures_dir, model_order=None):
             if len(vals) > 0:
                 mat[i, j] = float(np.median(vals))
 
-    # Row-normalise for preference panel
     mat_norm = np.full_like(mat, np.nan)
     for i in range(len(models)):
         row = mat[i]
@@ -54,10 +35,9 @@ def generate(df_ens_rq33, figures_dir, model_order=None):
 
     fig, axes = plt.subplots(1, 2, figsize=(9.5, 4.2))
 
-    # ── Left: absolute MRE ────────────────────────────────────────────────
     ax = axes[0]
     vmin = float(np.nanmin(mat)); vmax = float(np.nanmax(mat))
-    cmap0 = matplotlib.cm.get_cmap("YlOrRd_r")  # green = low error = better
+    cmap0 = matplotlib.cm.get_cmap("YlOrRd_r")
     im0 = ax.imshow(mat, cmap=cmap0, vmin=vmin, vmax=vmax, aspect="auto")
     ax.set_xticks(range(3)); ax.set_xticklabels(RULES, fontsize=8)
     ax.set_yticks(range(len(models))); ax.set_yticklabels(models, fontsize=8)
@@ -70,9 +50,8 @@ def generate(df_ens_rq33, figures_dir, model_order=None):
                         color="black" if v < (vmin + (vmax - vmin) * 0.65) else "white")
     fig.colorbar(im0, ax=ax, fraction=0.05, pad=0.03)
 
-    # ── Right: row-normalised preference ──────────────────────────────────
     ax = axes[1]
-    cmap1 = matplotlib.cm.get_cmap("RdYlGn_r")  # 0=best(green) → 1=worst(red)
+    cmap1 = matplotlib.cm.get_cmap("RdYlGn_r")
     im1 = ax.imshow(mat_norm, cmap=cmap1, vmin=0, vmax=1, aspect="auto")
     ax.set_xticks(range(3)); ax.set_xticklabels(RULES, fontsize=8)
     ax.set_yticks(range(len(models))); ax.set_yticklabels([], fontsize=8)
@@ -89,9 +68,7 @@ def generate(df_ens_rq33, figures_dir, model_order=None):
     fig.tight_layout()
     save_figure(fig, os.path.join(out_dir, "f17_type_rule_heatmap.pdf"))
 
-
 def _draw_type_rule(ax_abs, ax_norm, df_sub, models, title_suffix=""):
-    """Shared drawing logic for one metric slice."""
     mat = np.full((len(models), 3), np.nan)
     for i, m in enumerate(models):
         for j, rule in enumerate(RULES):
@@ -130,9 +107,7 @@ def _draw_type_rule(ax_abs, ax_norm, df_sub, models, title_suffix=""):
                              color="black" if 0.2 < v < 0.8 else "white")
     return im0, im1
 
-
 def generate_s1(df_ens_rq33, figures_dir, model_order=None):
-    """Same as generate() but S1 only."""
     out_dir = os.path.join(figures_dir, "f17")
     models  = model_order or sorted(df_ens_rq33["base_type"].unique())
     mins    = df_ens_rq33.groupby("dataset")["sample_size"].min().reset_index(name="_min")
@@ -147,9 +122,7 @@ def generate_s1(df_ens_rq33, figures_dir, model_order=None):
     fig.tight_layout()
     save_figure(fig, os.path.join(out_dir, "f17_type_rule_heatmap_s1.pdf"))
 
-
 def generate_4metric(df_ens_rq33, figures_dir, model_order=None):
-    """2×2 grid: F17 (absolute + preference panels) for each of the 4 metrics."""
     out_dir = os.path.join(figures_dir, "f17")
     models  = model_order or sorted(df_ens_rq33["base_type"].unique())
 

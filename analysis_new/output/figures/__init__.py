@@ -1,3 +1,5 @@
+# Re-exports all figure-generating functions.
+
 from . import (
     f1_singles_heatmap,
     f2_ensemble_gain,

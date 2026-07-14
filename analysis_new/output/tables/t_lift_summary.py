@@ -1,24 +1,10 @@
-"""
-T_LIFT_SUMMARY: Compact ensemble-vs-single lift summary per base type (RQ2).
+# T_LIFT_SUMMARY: Compact ensemble-vs-single lift summary per base type (RQ2).
 
-8 rows (base types), columns:
-  S_rank   — mean SK rank of the single in the mixed 16-competitor ranking (MRE)
-  E_rank   — mean SK rank of the best ensemble in the same ranking
-  Delta    — E_rank - S_rank  (negative = ensemble moved up)
-  S_Borda  — Borda rank of the single among all 16 competitors (1=best)
-  E_Borda  — Borda rank of the ensemble among all 16 competitors
-  D_Borda  — E_Borda - S_Borda (negative = ensemble moved up in Borda)
-  DS_wins  — % of 8 datasets where E has lower mean SK rank than S
-
-Sorted by Delta (most improved first).
-Combines f_gap_close + f_borda_mixed into one table.
-"""
 import os
 import numpy as np
 import pandas as pd
 
 from output.utils import bold, save_tex
-
 
 def generate(sk_mixed, latex_dir, model_order=None):
     out_dir = os.path.join(latex_dir, "t_lift_summary")
@@ -34,19 +20,16 @@ def generate(sk_mixed, latex_dir, model_order=None):
         comp_s = f"{bt}_S"
         comp_e = f"{bt}_E"
 
-        # Mean SK rank across all scenarios
         s_rank = sub[sub["competitor"] == comp_s]["sk_rank"].mean()
         e_rank = sub[sub["competitor"] == comp_e]["sk_rank"].mean()
         delta  = e_rank - s_rank
 
-        # Borda rank among 16 competitors: rank each by mean SK rank
         overall = sub.groupby("competitor")["sk_rank"].mean()
         borda   = overall.rank(method="average")
         s_borda = borda.get(comp_s, np.nan)
         e_borda = borda.get(comp_e, np.nan)
         d_borda = e_borda - s_borda
 
-        # % datasets where E wins (lower mean SK rank than S)
         ds_ranks = sub.groupby(["competitor", "dataset"])["sk_rank"].mean().unstack("dataset")
         datasets = ds_ranks.columns.tolist()
         wins = 0

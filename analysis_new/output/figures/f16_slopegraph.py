@@ -1,17 +1,5 @@
-"""
-F16: Slopegraph — Single → Ensemble Base Borda Rank (RQ3.1).
+# F16: Slopegraph — Single → Ensemble Base Borda Rank (RQ3.1).
 
-Left column  = Borda rank as a standalone single model (1 = best, 8 = worst).
-Right column = Borda rank as an ensemble base learner (1 = best, 8 = worst).
-Lines connect each model type between the two settings.
-
-Visual interpretation:
-  Line going DOWN  → model gains rank by being inside an ensemble (good ensemble base)
-  Line going UP    → model loses rank (works better solo than as a base)
-  Flat line        → rank preserved regardless of setting
-
-This is the cleanest visual for RQ3.1 — no arithmetic needed, the story is in the slopes.
-"""
 import os
 import numpy as np
 import pandas as pd
@@ -21,14 +9,7 @@ import matplotlib.pyplot as plt
 
 from .plot_utils import MODEL_COLORS, save_figure
 
-
 def generate(borda_global_singles, borda_global_ens, figures_dir, model_order=None):
-    """
-    Parameters
-    ----------
-    borda_global_singles : [model_type, borda_total_all, borda_rank]
-    borda_global_ens     : [base_type OR model_type, borda_total_all, borda_rank]
-    """
     out_dir = os.path.join(figures_dir, "f16")
     models  = model_order or sorted(borda_global_singles["model_type"].unique())
 
@@ -41,7 +22,7 @@ def generate(borda_global_singles, borda_global_ens, figures_dir, model_order=No
     ax.set_xlim(-0.6, 1.6)
     n_models = len(models)
     ax.set_ylim(0.3, n_models + 0.7)
-    ax.invert_yaxis()  # rank 1 at top
+    ax.invert_yaxis()
 
     for model in models:
         sr = s_rank.get(model)
@@ -51,10 +32,8 @@ def generate(borda_global_singles, borda_global_ens, figures_dir, model_order=No
         color = MODEL_COLORS.get(model, "#333")
         lw = 2.0 if sr != er else 1.2
         ax.plot([0, 1], [sr, er], color=color, linewidth=lw, alpha=0.85)
-        # Label left side
         ax.text(-0.07, sr, f"{model}  ({sr})",
                 ha="right", va="center", fontsize=8, color=color)
-        # Label right side
         ax.text(1.07, er, f"({er})",
                 ha="left",  va="center", fontsize=8, color=color)
 
