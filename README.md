@@ -13,9 +13,9 @@ configuration option, and the last column is the performance value to be
 predicted.
 
 ### /results_paper
-This folder does not contain the raw results directly. Due to their large size, separate download links are provided for each dataset in `results_paper/results_paper.txt` — download and extract them here to reproduce the paper's original results. The folder/file structure is explained below.
+This folder does not contain the raw results directly. Due to their large size, separate download links are provided for each dataset in `results_paper/results_paper.txt`. Download and extract them here to reproduce the paper's original results. The folder/file structure is explained below.
 
-Any new execution of `main.py` writes to `/results_new` instead (see `main.py`), so `/results_paper` is never overwritten. `/results_new` is git-ignored — it stays local and is not part of this repository.
+Any new execution of `main.py` writes to `/results_new` instead (see `main.py`), so `/results_paper` is never overwritten. `main.py` creates `/results_new` automatically on first run.
 
 The format of the results is as follows:
 
@@ -80,9 +80,9 @@ and evaluating the ensemble variants.
 
 ### /analysis_new
 
-Analysis code (statistics, tables, figures) for the paper. It only *reads*
-result JSON files already produced by `main.py` — it never re-runs any
-model or experiment. See "How to Run the Analysis" below.
+Analysis code (statistics, tables, figures) for the paper. It only reads
+result JSON files already produced by `main.py` (it never re-runs any
+model or experiment). See "How to Run the Analysis" below.
 
 ## Prerequisites and Installation
 
@@ -98,19 +98,18 @@ To reproduce the experiments from the paper:
     python main.py --model baseline
     python main.py
 
-Note: Results from the next execution will be saved in `/results_new` by default.
+Note: Results from the next execution will be saved in `/results_new`.
 
 ## How to Run the Analysis
 
 The code under `/analysis_new` only reads existing result JSON files (from
 `/results_paper` or `/results_new`) and never re-runs any experiment.
 
-1. Install its dependencies (on top of `requirements.txt`):
+1. (If needed) Install its dependencies (on top of `requirements.txt`):
 
        pip install -r analysis_new/requirements_analysis.txt
 
-2. Point it at the results you want to analyze by setting `RESULTS_DIR` in
-   `analysis_new/config.py`:
+2. Set `RESULTS_DIR` in `analysis_new/config.py`:
 
        RESULTS_DIR = os.path.normpath(os.path.join(_HERE, "..", "results_new"))
 
@@ -120,12 +119,14 @@ The code under `/analysis_new` only reads existing result JSON files (from
 3. Run the pipeline from `analysis_new/`:
 
        cd analysis_new
-       python run_all.py --all
+       python run_all.py --all --sel-agg mean
+
+   `--sel-agg mean` is the aggregation used for the tables/figures in the
+   paper; it writes to `output_artifacts/latex_mean/` and
+   `output_artifacts/figures_mean/` (the default `--sel-agg median` writes
+   to `latex/`/`figures/`).
 
    Or run individual stages (each caches its output, so later stages reuse
    it): `--load`, `--aggregate`, `--tables`, `--figures`. Add `--force` to
    ignore the cache and recompute. Outputs are written to
    `analysis_new/output_artifacts/` (`cache/`, `latex/`, `figures/`).
-
-4. Optional: preview the generated LaTeX tables in a browser with
-   `python view_tables.py`.
